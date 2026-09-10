@@ -88,7 +88,7 @@ export default function Library() {
           return (
             <Comp
               key={file.variant}
-              {...(file.ready ? { href: `/files/${file.variant}` } : { "aria-disabled": true })}
+              {...(file.ready ? { href: "/book-detail" } : { "aria-disabled": true })}
               className={`group flex min-w-0 flex-1 flex-col ${
                 file.ready ? "cursor-pointer" : "cursor-default"
               } ${index < FILES.length - 1 ? "border-r border-foreground/25" : ""}`}

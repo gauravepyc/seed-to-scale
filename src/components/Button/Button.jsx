@@ -3,7 +3,7 @@ import Link from "next/link";
 const slide =
   "transition-transform duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)]";
 
-function Arrow({ className = "" }) {
+function ArrowRight({ className = "" }) {
   return (
     <svg
       viewBox="0 0 16 16"
@@ -22,13 +22,35 @@ function Arrow({ className = "" }) {
   );
 }
 
+function ArrowDown({ className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+      className={`size-[1.2em] ${className}`}
+    >
+      <path
+        d="M8 3v10M4.5 9.5 8 13l3.5-3.5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function Button({
   title,
   href,
+  arrow = "right",
   className = "",
   ...props
 }) {
   const Comp = href ? Link : "div";
+  const down = arrow === "down";
+  const Icon = down ? ArrowDown : ArrowRight;
 
   return (
     <Comp
@@ -47,9 +69,19 @@ export default function Button({
         </span>
       </span>
       <span className="relative inline-flex size-[1.2em] overflow-hidden">
-        <Arrow className={`absolute inset-0 ${slide} group-hover:translate-x-[130%]`} />
-        <Arrow
-          className={`absolute inset-0 -translate-x-[130%] ${slide} group-hover:translate-x-0`}
+        <Icon
+          className={`absolute inset-0 ${slide} ${
+            down
+              ? "group-hover:translate-y-[130%]"
+              : "group-hover:translate-x-[130%]"
+          }`}
+        />
+        <Icon
+          className={`absolute inset-0 ${slide} ${
+            down
+              ? "-translate-y-[130%] group-hover:translate-y-0"
+              : "-translate-x-[130%] group-hover:translate-x-0"
+          }`}
         />
       </span>
     </Comp>

@@ -46,7 +46,7 @@ body {
 .text-hero,
 .text-title {
   font-family: var(--font-glare), Georgia, serif;
-  font-weight: 400;
+  font-weight: 300;
 }
 
 .text-content {
@@ -55,4 +55,12 @@ body {
 
 .text-meta {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+.pixel-field {
+  gap: 1px;
+}
+
+.pixel-cube {
+  transition: opacity 0.4s ease-out;
 }

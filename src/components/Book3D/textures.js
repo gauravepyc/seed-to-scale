@@ -1,6 +1,6 @@
 import { CanvasTexture, SRGBColorSpace } from "three";
 
-const CREAM = "#EFE9E1";
+const CREAM = "#F6F2EC";
 const INK = "#222222";
 const CORAL = "#FF7A61";
 const CORAL_DEEP = "#FF6B4A";

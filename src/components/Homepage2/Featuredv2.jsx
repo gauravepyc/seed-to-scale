@@ -37,9 +37,9 @@ export default function Featuredv2() {
           immediateRender: true,
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: "top 50%",
-            end: "top 12%",
-            scrub: 1,
+            start: "-10% 55%",
+            end: "top 10%",
+            scrub: true,
           },
         }
       );

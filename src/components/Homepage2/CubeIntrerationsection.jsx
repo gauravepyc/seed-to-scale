@@ -482,15 +482,12 @@ export default function CubeIntrerationsection() {
       <canvas ref={canvasRef} className="block h-full w-full cursor-pointer" />
       <div
         ref={hintRef}
-        className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-foreground/50 backdrop-blur-sm transition-opacity duration-700"
+        className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-foreground/40 transition-opacity duration-700"
       >
-        <div className="px-[4vw] text-center">
-         
-          <p className=" text-[4vw] uppercase font-light leading-[1.05] text-white max-md:mt-3 max-md:text-[28px]">
-            Move your mouse here
-          </p>
-        
-        </div>
+        <span
+          aria-hidden
+          className="block size-[1.5vw] rounded-full bg-white/60 max-md:size-2.5 [animation:cue-slide_4.8s_ease-in-out_infinite]"
+        />
       </div>
     </section>
   );

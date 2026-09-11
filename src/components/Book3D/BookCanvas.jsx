@@ -64,7 +64,7 @@ export default function BookCanvas({
     renderer.shadowMap.type = PCFSoftShadowMap;
     renderer.outputColorSpace = SRGBColorSpace;
     renderer.toneMapping = ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.18;
+    renderer.toneMappingExposure = 1.42;
     renderer.setClearColor(0x000000, 0);
 
     const scene = new Scene();
@@ -72,15 +72,15 @@ export default function BookCanvas({
     camera.position.set(0, 0, cameraDistance);
     camera.lookAt(0, 0, 0);
 
-    scene.add(new AmbientLight(0xfff6ec, 0.62));
-    scene.add(new HemisphereLight(0xfff8f2, 0xc4b6a4, 0.78));
+    scene.add(new AmbientLight(0xfff6ec, 0.82));
+    scene.add(new HemisphereLight(0xfff8f2, 0xc4b6a4, 0.95));
 
-    const key = new DirectionalLight(0xfff8f2, interactive ? 1.22 : 1.38);
+    const key = new DirectionalLight(0xfff8f2, interactive ? 1.45 : 1.62);
     key.position.set(2.6, 3.8, 3.4);
     key.castShadow = interactive;
     key.shadow.mapSize.set(1024, 1024);
     key.shadow.radius = 8;
-    key.shadow.intensity = 0.18;
+    key.shadow.intensity = 0.12;
     key.shadow.bias = -0.0015;
     key.shadow.normalBias = 0.035;
     key.shadow.camera.near = 1;
@@ -91,15 +91,15 @@ export default function BookCanvas({
     key.shadow.camera.bottom = -3.2;
     scene.add(key);
 
-    const fill = new DirectionalLight(0xfff4e8, 0.58);
+    const fill = new DirectionalLight(0xfff4e8, 0.78);
     fill.position.set(-3.4, 1.6, 2.6);
     scene.add(fill);
 
-    const bounce = new DirectionalLight(0xfff8f2, 0.42);
+    const bounce = new DirectionalLight(0xfff8f2, 0.58);
     bounce.position.set(-1.1, 2.4, 3.2);
     scene.add(bounce);
 
-    const rim = new DirectionalLight(0xefe9e1, 0.48);
+    const rim = new DirectionalLight(0xefe9e1, 0.58);
     rim.position.set(-1.4, 2.6, -3.6);
     scene.add(rim);
 

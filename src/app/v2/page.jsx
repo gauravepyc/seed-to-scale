@@ -7,7 +7,7 @@ import React from 'react'
 import FaqV2 from '@/components/Homepage2/FAQsV2'
 import AboutV2 from '@/components/Homepage2/AboutV2'
 import FrameworkV2 from '@/components/Homepage2/FrameworkV2'
-import CubeIntrerationsection from '@/components/Homepage2/CubeIntrerationsection'
+import GooeyLayers from '@/components/Homepage2/GooeyLayers'
 
 export default function page() {
     return (
@@ -16,7 +16,8 @@ export default function page() {
                 <span className='absolute h-full w-px bg-foreground/25 left-[5vw] top-0' />
                 <span className='absolute h-full w-px bg-foreground/25 right-[5vw] top-0' />
                 <Herov2 />
-                <CubeIntrerationsection />
+                {/* <CubeIntrerationsection /> */}
+                <GooeyLayers />
                 <Featuredv2 />
                 <Libraryv2 />
                 <StatsV2 />

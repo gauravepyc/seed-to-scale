@@ -93,7 +93,7 @@ export default function StatsV2() {
   return (
     <section
       ref={sectionRef}
-      className=" flex min-h-screen my-[8vw] w-full max-md:min-h-0 max-md:flex-col"
+      className=" flex h-fit my-[8vw] w-full max-md:min-h-0 max-md:flex-col"
     >
       <div className="flex w-1/2 flex-col justify-between bg-foreground px-[5vw] py-[6vw] max-md:w-full max-md:gap-16 max-md:py-16">
         <SplitText
@@ -120,11 +120,11 @@ export default function StatsV2() {
       </div>
 
       <div
-        className="flex w-1/2 flex-col items-center justify-center bg-primary px-[4vw] py-[8vw] text-center max-md:w-full max-md:min-h-[70vw] max-md:py-20"
+        className="flex w-1/2 flex-col items-center justify-center bg-primary px-[4vw] py-[10vw] text-center max-md:w-full max-md:min-h-[70vw] max-md:py-20"
         aria-label="4 AI Capability Frontiers Explored"
       >
         <SlotValue value="4" className="text-[16vw] max-md:text-[28vw]" />
-        <p className="mt-[1.4vw] text-content text-[#FBF8F3] max-md:mt-4">
+        <p className="-mt-[1.4vw] text-content text-[#FBF8F3] max-md:mt-4">
           AI Capability
           <br />
           Frontiers Explored

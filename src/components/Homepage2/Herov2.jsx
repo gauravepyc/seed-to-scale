@@ -105,7 +105,7 @@ export default function Herov2() {
   return (
     <section
       ref={sectionRef}
-      className="flex h-screen w-full border-b border-foreground/25 bg-background max-md:h-auto max-md:flex-col max-md:pt-28"
+      className="flex h-fit w-full mt-[5vw] border-b border-foreground/25 bg-background max-md:h-auto max-md:flex-col max-md:pt-28"
     >
       <div className="flex w-1/2 items-center justify-center px-[2vw] max-md:w-full max-md:px-0 max-md:py-16">
         <h1
@@ -118,7 +118,7 @@ export default function Herov2() {
         </h1>
       </div>
 
-      <div className="flex w-1/2 flex-col justify-center border-l border-foreground/25 px-[6vw] max-md:w-full max-md:border-l-0 max-md:border-t max-md:px-0 max-md:py-16">
+      <div className="flex w-1/2 flex-col  py-[10vw]  justify-center border-l border-foreground/25 px-[6vw] max-md:w-full max-md:border-l-0 max-md:border-t max-md:px-0 max-md:py-16">
         <SplitText
           as="p"
           className="max-w-[28vw]  text-[1.65vw] text-foreground max-md:max-w-none"

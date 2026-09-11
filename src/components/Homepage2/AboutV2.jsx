@@ -98,8 +98,6 @@ export default function AboutV2() {
         },
       });
 
-      tl.to(vLines, { scaleY: 1, stagger: 0.05, duration: 0.7 }, 0);
-      tl.to(hLines, { scaleX: 1, stagger: 0.05, duration: 0.7 }, 0.06);
       tl.to(kicker, { autoAlpha: 1, y: 0, duration: 0.4 }, 0.12);
       tl.to(
         headingSplit.lines,
@@ -114,7 +112,7 @@ export default function AboutV2() {
       tl.to({}, { duration: 0.85 });
 
       pointCopy.forEach(({ num, lines }, i) => {
-        const at = 2.2 + i * 0.5;
+        const at = 1.8 + i * 0.5;
         tl.to(num, { autoAlpha: 1, y: 0, duration: 0.28 }, at);
         tl.to(
           lines,
@@ -122,6 +120,10 @@ export default function AboutV2() {
           at + 0.04
         );
       });
+
+      const total = tl.duration();
+      tl.to(vLines, { scaleY: 1, duration: total }, 0);
+      tl.to(hLines, { scaleX: 1, duration: total }, 0);
 
       return () => {
         tl.scrollTrigger?.kill();
@@ -133,10 +135,10 @@ export default function AboutV2() {
   );
 
   return (
-    <div ref={wrapRef} className="relative h-[300vh]">
+    <div ref={wrapRef} className="relative h-[150vh]">
       <section
         ref={pinRef}
-        className="sticky top-0 flex min-h-screen w-full items-center border-l border-r border-t border-foreground/25 bg-[#EFEBE4] text-foreground"
+        className="sticky top-0 flex h-screen w-full items-center border-l border-r border-t border-foreground/25 bg-[#EFEBE4] text-foreground"
       >
 
         <div
@@ -147,7 +149,7 @@ export default function AboutV2() {
             <span
               key={`v-${pos}`}
               data-about-grid-v
-              className="absolute top-0 h-full w-px bg-foreground/15 will-change-transform"
+              className="absolute top-0 h-full w-px bg-foreground/10 will-change-transform"
               style={{ left: `${pos}%` }}
             />
           ))}
@@ -155,7 +157,7 @@ export default function AboutV2() {
             <span
               key={`h-${pos}`}
               data-about-grid-h
-              className="absolute left-0 h-px w-full bg-foreground/15 will-change-transform"
+              className="absolute left-0 h-px w-full bg-foreground/10 will-change-transform"
               style={{ top: `${pos}%` }}
             />
           ))}

@@ -1,11 +1,58 @@
+"use client";
+
+import { useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
 import Button from "@/components/Button/Button";
 import SplitText from "@/components/Reusable/SplitText";
+import BookCanvas from "../Book3D/BookCanvas";
 import FeaturedStrips from "./FeaturedStrips";
 
+gsap.registerPlugin(useGSAP, ScrollTrigger);
+
 export default function Featuredv2() {
+  const sectionRef = useRef(null);
+
+  useGSAP(
+    () => {
+      const book = sectionRef.current?.querySelector("[data-featured-book]");
+      if (!book) return;
+
+      gsap.fromTo(
+        book,
+        {
+          xPercent: 108,
+          yPercent: -18,
+          rotate: 10,
+          rotateY: -16,
+        },
+        {
+          xPercent: 0,
+          yPercent: 0,
+          rotate: 0,
+          rotateY: 0,
+          ease: "none",
+          overwrite: "auto",
+          immediateRender: true,
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top 50%",
+            end: "top 12%",
+            scrub: 1,
+          },
+        }
+      );
+    },
+    { scope: sectionRef }
+  );
+
   return (
-    <section className="flex min-h-screen w-full bg-primary text-background max-md:min-h-0 max-md:flex-col">
-      <div className="flex w-1/2 flex-col justify-center px-[5vw] py-[8vw] max-md:w-full max-md:py-16">
+    <section
+      ref={sectionRef}
+      className="flex h-fit w-full bg-primary text-background max-md:min-h-0 max-md:flex-col"
+    >
+      <div className="flex w-1/2 flex-col justify-center px-[5vw] py-[4vw] max-md:w-full max-md:py-16">
         <p className="text-meta uppercase text-background">
           Featured · Latest issue
         </p>
@@ -39,8 +86,17 @@ export default function Featuredv2() {
         />
       </div>
 
-      <div className="relative min-h-[42vw] w-1/2 overflow-hidden max-md:min-h-[90vw] max-md:w-full">
-        <FeaturedStrips />
+      <div className="relative min-h-[42vw] w-1/2 overflow-hidden [perspective:1400px] max-md:min-h-[90vw] max-md:w-full">
+        <div className="pointer-events-none absolute inset-0">
+          <FeaturedStrips />
+        </div>
+        <div className="pointer-events-none absolute inset-0 z-[5] bg-primary/55" />
+        <div
+          data-featured-book
+          className="absolute inset-0 z-10 origin-center will-change-transform"
+        >
+          <BookCanvas />
+        </div>
       </div>
     </section>
   );

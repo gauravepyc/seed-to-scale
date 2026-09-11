@@ -47,23 +47,46 @@ export default function Libraryv2() {
             const row = sectionRef.current.querySelector("[data-library-row]");
             if (!row || !books.length) return;
 
-            gsap.fromTo(
-                books,
-                { yPercent: -100 },
-                {
-                    yPercent: 0,
-                    stagger: 0.12,
-                    ease: "none",
-                    overwrite: "auto",
-                    immediateRender: true,
-                    scrollTrigger: {
-                        trigger: row,
-                        start: "top 50%",
-                        end: "top 12%",
-                        scrub: 1,
+            const tl = gsap.timeline({
+                defaults: { ease: "none" },
+                scrollTrigger: {
+                    trigger: row,
+                    start: "top 72%",
+                    end: "top 18%",
+                    scrub: 1.15,
+                },
+            });
+
+            books.forEach((book, i) => {
+                const mid = (books.length - 1) / 2;
+                const from =
+                    i < mid
+                        ? { xPercent: 110, yPercent: 0, rotateY: -18 }
+                        : i > mid
+                          ? { xPercent: -110, yPercent: 0, rotateY: 18 }
+                          : { xPercent: 0, yPercent: -100, rotateY: 0 };
+
+                tl.fromTo(
+                    book,
+                    {
+                        ...from,
+                        scale: 0.88,
+                        autoAlpha: 0.4,
+                        transformPerspective: 1100,
+                        transformOrigin: "50% 50%",
                     },
-                }
-            );
+                    {
+                        xPercent: 0,
+                        yPercent: 0,
+                        rotateY: 0,
+                        scale: 1,
+                        autoAlpha: 1,
+                        duration: 1,
+                        immediateRender: true,
+                    },
+                    i * 0.1
+                );
+            });
         },
         { scope: sectionRef }
     );
@@ -95,18 +118,18 @@ export default function Libraryv2() {
                             className={`group flex min-w-0 flex-1 flex-col ${file.ready ? "cursor-pointer" : "cursor-default"
                                 } ${index < FILES.length - 1 ? "border-r border-foreground/25" : ""}`}
                         >
-                            <div className="relative h-[36vw] w-full overflow-hidden max-md:h-[80vw]">
-                                <div data-library-book className="h-full w-full will-change-transform">
+                            <div className="relative flex h-[30vw] w-full items-center justify-center overflow-hidden px-[1.4vw] py-[1.2vw] max-md:h-[70vw] max-md:px-4 max-md:py-6">
+                                <div data-library-book className="h-full w-full will-change-transform [transform-style:preserve-3d]">
                                     <BookCanvas
                                         variant={file.variant}
                                         interactive={false}
                                         restRotation={file.restRotation}
-                                        cameraDistance={3.15}
+                                        cameraDistance={3.28}
                                     />
                                 </div>
-                                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-background/70 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-background/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                                     {file.ready ? (
-                                        <Button title="Read the book!" />
+                                        <Button title="Read the book!" className="cursor-pointer" />
                                     ) : (
                                         <span className="font-glare text-[1.5vw] leading-none text-primary max-md:text-[22px]">
                                             In progress

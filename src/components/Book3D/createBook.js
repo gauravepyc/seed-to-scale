@@ -59,13 +59,13 @@ pageGeometry.setAttribute(
   new Float32BufferAttribute(skinWeights, 4)
 );
 
-const paperColor = new Color("#EFE9E1");
+const paperColor = new Color("#ffffff");
 const emissiveColor = new Color("#FF3621");
 
 const mattePaper = {
-  roughness: 0.92,
+  roughness: 0.72,
   metalness: 0,
-  envMapIntensity: 0.12,
+  envMapIntensity: 0,
 };
 
 function createEdgeMaterials() {
@@ -107,7 +107,7 @@ function createSkinnedPage(number, front, back, pageCount, edgeMaterials) {
   const picture = createPageTexture(front);
   const picture2 = createPageTexture(back);
   const isCover = number === 0 || number === pageCount - 1;
-  const roughness = isCover ? 0.62 : 0.86;
+  const roughness = isCover ? 0.32 : 0.68;
 
   const materials = [
     ...edgeMaterials,
@@ -116,9 +116,9 @@ function createSkinnedPage(number, front, back, pageCount, edgeMaterials) {
       map: picture,
       roughness,
       metalness: 0,
-      clearcoat: isCover ? 0.38 : 0.12,
-      clearcoatRoughness: isCover ? 0.28 : 0.52,
-      envMapIntensity: isCover ? 0.55 : 0.22,
+      clearcoat: isCover ? 0.24 : 0.06,
+      clearcoatRoughness: isCover ? 0.78 : 0.9,
+      envMapIntensity: 0,
       emissive: emissiveColor,
       emissiveIntensity: 0,
     }),
@@ -127,9 +127,9 @@ function createSkinnedPage(number, front, back, pageCount, edgeMaterials) {
       map: picture2,
       roughness,
       metalness: 0,
-      clearcoat: isCover ? 0.38 : 0.12,
-      clearcoatRoughness: isCover ? 0.28 : 0.52,
-      envMapIntensity: isCover ? 0.55 : 0.22,
+      clearcoat: isCover ? 0.24 : 0.06,
+      clearcoatRoughness: isCover ? 0.78 : 0.9,
+      envMapIntensity: 0,
       emissive: emissiveColor,
       emissiveIntensity: 0,
     }),
@@ -171,12 +171,12 @@ class PageSheet {
   }
 
   update(delta) {
-    const emissiveIntensity = this.highlighted ? 0.06 : 0;
+    const emissiveIntensity = this.highlighted ? 0.42 : 0;
     this.mesh.material[4].emissiveIntensity = this.mesh.material[5].emissiveIntensity =
       MathUtils.lerp(
         this.mesh.material[4].emissiveIntensity,
         emissiveIntensity,
-        0.1
+        0.22
       );
 
     if (this.lastOpened !== this.opened) {

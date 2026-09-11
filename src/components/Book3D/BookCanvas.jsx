@@ -13,7 +13,6 @@ import {
   PCFSoftShadowMap,
   PerspectiveCamera,
   PlaneGeometry,
-  PMREMGenerator,
   Raycaster,
   Scene,
   ShadowMaterial,
@@ -21,7 +20,6 @@ import {
   Vector2,
   WebGLRenderer,
 } from "three";
-import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import useTiltInput from "@/components/Reusable/useTiltInput";
 import { createBook } from "./createBook";
 
@@ -64,7 +62,7 @@ export default function BookCanvas({
     renderer.shadowMap.type = PCFSoftShadowMap;
     renderer.outputColorSpace = SRGBColorSpace;
     renderer.toneMapping = ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 0.92;
+    renderer.toneMappingExposure = 1.18;
     renderer.setClearColor(0x000000, 0);
 
     const scene = new Scene();
@@ -72,15 +70,15 @@ export default function BookCanvas({
     camera.position.set(0, 0, cameraDistance);
     camera.lookAt(0, 0, 0);
 
-    scene.add(new AmbientLight(0xefe9e1, 0.22));
-    scene.add(new HemisphereLight(0xefe9e1, 0xb8a894, 0.32));
+    scene.add(new AmbientLight(0xfff6ec, 0.62));
+    scene.add(new HemisphereLight(0xfff8f2, 0xc4b6a4, 0.78));
 
-    const key = new DirectionalLight(0xefe9e1, interactive ? 0.72 : 0.88);
+    const key = new DirectionalLight(0xfff8f2, interactive ? 1.22 : 1.38);
     key.position.set(2.6, 3.8, 3.4);
     key.castShadow = interactive;
     key.shadow.mapSize.set(1024, 1024);
     key.shadow.radius = 8;
-    key.shadow.intensity = 0.28;
+    key.shadow.intensity = 0.18;
     key.shadow.bias = -0.0015;
     key.shadow.normalBias = 0.035;
     key.shadow.camera.near = 1;
@@ -91,25 +89,17 @@ export default function BookCanvas({
     key.shadow.camera.bottom = -3.2;
     scene.add(key);
 
-    const fill = new DirectionalLight(0xefe9e1, 0.28);
+    const fill = new DirectionalLight(0xfff4e8, 0.58);
     fill.position.set(-3.4, 1.6, 2.6);
     scene.add(fill);
 
-    const rim = new DirectionalLight(0xefe9e1, 0.38);
+    const bounce = new DirectionalLight(0xfff8f2, 0.42);
+    bounce.position.set(-1.1, 2.4, 3.2);
+    scene.add(bounce);
+
+    const rim = new DirectionalLight(0xefe9e1, 0.48);
     rim.position.set(-1.4, 2.6, -3.6);
     scene.add(rim);
-
-    const front = new DirectionalLight(0xefe9e1, 0.2);
-    front.position.set(0.15, 0.6, 4.4);
-    scene.add(front);
-
-    const pmrem = new PMREMGenerator(renderer);
-    const room = new RoomEnvironment();
-    const envMap = pmrem.fromScene(room, 0.04).texture;
-    scene.environment = envMap;
-    scene.environmentIntensity = 0.22;
-    room.dispose();
-    pmrem.dispose();
 
     const book = createBook(cover);
     book.meshes.forEach((mesh) => {
@@ -247,7 +237,6 @@ export default function BookCanvas({
       book.dispose();
       ground.geometry.dispose();
       ground.material.dispose();
-      envMap.dispose();
       renderer.dispose();
       wrap.style.cursor = "default";
     };

@@ -8,6 +8,7 @@ const BG = "#FBF8F3";
 const HOT = { r: 255, g: 54, b: 33 };
 const SPREAD = 2;
 const STAMPS = 6;
+const REVEAL = 2;
 const IDLE_MS = 50;
 
 function hash(n) {
@@ -15,10 +16,7 @@ function hash(n) {
   return t - Math.floor(t);
 }
 
-function orangeRgb(seed) {
-  const hue = 10 + hash(seed) * 14;
-  const sat = 0.62 + hash(seed + 11) * 0.3;
-  const lit = 0.5 + hash(seed + 23) * 0.16;
+function hslRgb(hue, sat, lit) {
   const a = sat * Math.min(lit, 1 - lit);
   const f = (n) => {
     const k = (n + hue / 30) % 12;
@@ -31,6 +29,84 @@ function orangeRgb(seed) {
   };
 }
 
+function orangeRgb(seed) {
+  return hslRgb(
+    10 + hash(seed) * 14,
+    0.62 + hash(seed + 11) * 0.3,
+    0.5 + hash(seed + 23) * 0.16
+  );
+}
+
+const GLYPHS = {
+  T: ["11111", "00100", "00100", "00100", "00100"],
+  W: ["10001", "10001", "10101", "11011", "10001"],
+  F: ["11110", "10000", "11100", "10000", "10000"],
+};
+
+function lastBottomCol(rowsG) {
+  const bottom = rowsG[rowsG.length - 1];
+  for (let i = bottom.length - 1; i >= 0; i--) {
+    if (bottom[i] === "1") return i;
+  }
+  return bottom.length - 1;
+}
+
+function groupWidth(ch, gap) {
+  const rowsG = GLYPHS[ch];
+  const gw = rowsG[0].length;
+  const dotCol = lastBottomCol(rowsG) + 1 + gap;
+  return Math.max(gw, dotCol + 1);
+}
+
+function stampTWF(field, cols, rows) {
+  const letters = ["T", "W", "F"];
+  const gh = 5;
+  const gap = 1;
+  const unitsW = letters.reduce(
+    (w, ch, i) => w + groupWidth(ch, gap) + (i < letters.length - 1 ? gap : 0),
+    0
+  );
+  const scale = Math.max(
+    1,
+    Math.min(Math.floor(cols / unitsW), Math.floor(rows / gh)) - 1
+  );
+  const cellW = scale;
+  const cellH = scale;
+  const ox = Math.floor((cols - unitsW * cellW) / 2);
+  const oy = Math.floor((rows - gh * cellH) / 2);
+  const letter = new Uint8Array(cols * rows);
+
+  const paintCell = (gx, gy) => {
+    for (let dy = 0; dy < cellH; dy++) {
+      for (let dx = 0; dx < cellW; dx++) {
+        const x = gx + dx;
+        const y = gy + dy;
+        if (x < 0 || y < 0 || x >= cols || y >= rows) continue;
+        letter[y * cols + x] = 1;
+      }
+    }
+  };
+
+  let cursor = ox;
+  letters.forEach((ch, i) => {
+    const rowsG = GLYPHS[ch];
+    const gw = rowsG[0].length;
+    for (let gy = 0; gy < gh; gy++) {
+      for (let gx = 0; gx < gw; gx++) {
+        if (rowsG[gy][gx] !== "1") continue;
+        paintCell(cursor + gx * cellW, oy + gy * cellH);
+      }
+    }
+    paintCell(
+      cursor + (lastBottomCol(rowsG) + 1 + gap) * cellW,
+      oy + (gh - 1) * cellH
+    );
+    cursor += (groupWidth(ch, gap) + (i < letters.length - 1 ? gap : 0)) * cellW;
+  });
+
+  field.letter = letter;
+}
+
 function buildField(cols, rows) {
   const n = cols * rows;
   const restA = new Float32Array(n);
@@ -40,6 +116,7 @@ function buildField(cols, rows) {
   const phase = new Float32Array(n);
   const heat = new Float32Array(n);
   const marked = new Uint8Array(n);
+  const shown = new Float32Array(n);
 
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
@@ -60,12 +137,26 @@ function buildField(cols, rows) {
     }
   }
 
-  return { restA, restR, restG, restB, phase, heat, marked, dirty: [] };
+  const field = {
+    restA,
+    restR,
+    restG,
+    restB,
+    phase,
+    heat,
+    marked,
+    shown,
+    letter: new Uint8Array(n),
+    dirty: [],
+  };
+  stampTWF(field, cols, rows);
+  return field;
 }
 
 export default function CubeIntrerationsection() {
   const sectionRef = useRef(null);
   const canvasRef = useRef(null);
+  const hintRef = useRef(null);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -84,6 +175,7 @@ export default function CubeIntrerationsection() {
     let lastCol = -1;
     let lastRow = -1;
     let seed = 1;
+    let twfRevealed = false;
     const waves = [];
     const rect = { left: 0, top: 0, width: 1, height: 1 };
 
@@ -103,7 +195,7 @@ export default function CubeIntrerationsection() {
 
     const stampAt = (cx, cy, s) => {
       const span = SPREAD * 2 + 1;
-      const { heat } = field;
+      const { heat, letter, shown } = field;
       for (let k = 0; k < STAMPS; k++) {
         const x = cx + Math.floor(hash(s * 17 + k * 91) * span) - SPREAD;
         const y = cy + Math.floor(hash(s * 29 + k * 53) * span) - SPREAD;
@@ -112,15 +204,28 @@ export default function CubeIntrerationsection() {
         heat[i] = 1;
         mark(i);
       }
+      for (let y = cy - REVEAL; y <= cy + REVEAL; y++) {
+        for (let x = cx - REVEAL; x <= cx + REVEAL; x++) {
+          if (x < 0 || y < 0 || x >= cols || y >= rows) continue;
+          const dd = (x - cx) * (x - cx) + (y - cy) * (y - cy);
+          if (dd > REVEAL * REVEAL) continue;
+          const i = y * cols + x;
+          const fall = 1 - Math.sqrt(dd) / (REVEAL + 0.35);
+          heat[i] = Math.max(heat[i], fall);
+          if (letter[i]) shown[i] = Math.min(1, shown[i] + 0.4 + fall * 0.6);
+          mark(i);
+        }
+      }
     };
 
     const stampRing = (ox, oy, r, s) => {
-      const { heat } = field;
+      const { heat, letter, shown } = field;
       const visit = (x, y) => {
         if (x < 0 || y < 0 || x >= cols || y >= rows) return;
         if (hash(x * 13 + y * 47 + s + r * 9) > 0.58) return;
         const i = y * cols + x;
         heat[i] = heat[i] > 0.75 ? 1 : heat[i] + 0.65;
+        if (letter[i]) shown[i] = Math.min(1, shown[i] + 0.85);
         mark(i);
       };
       if (r <= 0) {
@@ -150,11 +255,12 @@ export default function CubeIntrerationsection() {
     };
 
     const paint = (now) => {
-      const { restA, restR, restG, restB, phase, heat } = field;
+      const { restA, restR, restG, restB, phase, heat, letter, shown } = field;
       const w = canvas.width;
       const h = canvas.height;
       const cw = (w - GAP * (cols - 1)) / cols;
       const ch = (h - GAP * (rows - 1)) / rows;
+      const hasPointer = lastCol >= 0;
 
       ctx.fillStyle = BG;
       ctx.fillRect(0, 0, w, h);
@@ -169,7 +275,18 @@ export default function CubeIntrerationsection() {
           let r = restR[i];
           let g = restG[i];
           let b = restB[i];
-          if (ht > 0.02) {
+          let vis = shown[i];
+          if (hasPointer) {
+            const dx = x - lastCol;
+            const dy = y - lastRow;
+            vis = Math.max(vis, Math.max(0, 1 - Math.sqrt(dx * dx + dy * dy) / 3.4));
+          }
+          if (letter[i] && vis > 0.02) {
+            a = restA[i] + (1 - restA[i]) * vis;
+            r += (HOT.r - r) * vis;
+            g += (HOT.g - g) * vis;
+            b += (HOT.b - b) * vis;
+          } else if (ht > 0.02) {
             a = Math.min(1, restA[i] + 0.25 + ht * 0.75);
             const t = Math.min(1, ht * 1.2);
             r += (HOT.r - r) * t;
@@ -226,8 +343,34 @@ export default function CubeIntrerationsection() {
       }
       dirty.length = write;
 
+      checkReveal();
       paint(now);
       raf = requestAnimationFrame(tick);
+    };
+
+    const hideHint = () => {
+      if (hintRef.current) hintRef.current.style.opacity = "0";
+    };
+
+    const showHint = () => {
+      if (twfRevealed || !hintRef.current) return;
+      hintRef.current.style.opacity = "1";
+    };
+
+    const checkReveal = () => {
+      if (twfRevealed) return;
+      const { letter, shown } = field;
+      let n = 0;
+      let lit = 0;
+      for (let i = 0; i < letter.length; i++) {
+        if (!letter[i]) continue;
+        n += 1;
+        if (shown[i] > 0.45) lit += 1;
+      }
+      if (n && lit / n >= 0.22) {
+        twfRevealed = true;
+        hideHint();
+      }
     };
 
     const kick = () => {
@@ -247,6 +390,8 @@ export default function CubeIntrerationsection() {
         lastCol = -1;
         lastRow = -1;
         waves.length = 0;
+        twfRevealed = false;
+        showHint();
       }
       cacheRect();
       paint(performance.now());
@@ -272,12 +417,14 @@ export default function CubeIntrerationsection() {
       }
       lastCol = col;
       lastRow = row;
+      hideHint();
       kick();
     };
 
     const onLeave = () => {
       lastCol = -1;
       lastRow = -1;
+      showHint();
     };
 
     const onClick = (event) => {
@@ -330,9 +477,21 @@ export default function CubeIntrerationsection() {
   return (
     <section
       ref={sectionRef}
-      className="relative my-[5vw] h-[80vh] w-full overflow-hidden border-b border-t border-foreground/25"
+      className="relative my-[5vw] h-[30vw] w-full overflow-hidden border-b border-t border-foreground/25"
     >
       <canvas ref={canvasRef} className="block h-full w-full cursor-pointer" />
+      <div
+        ref={hintRef}
+        className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-foreground/50 backdrop-blur-sm transition-opacity duration-700"
+      >
+        <div className="px-[4vw] text-center">
+         
+          <p className=" text-[4vw] uppercase font-light leading-[1.05] text-white max-md:mt-3 max-md:text-[28px]">
+            Move your mouse here
+          </p>
+        
+        </div>
+      </div>
     </section>
   );
 }

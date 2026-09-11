@@ -27,7 +27,7 @@ function makeStrip(w, h, fromRight, row, barH) {
     y: row * barH,
     w: barW,
     h: barH,
-    speed: rand(22, 70),
+    speed: rand(55, 140),
     color: COLORS[(Math.random() * COLORS.length) | 0],
     alpha: rand(0.45, 1),
     row,
@@ -40,7 +40,7 @@ function makePixel(w, h, fromRight) {
     x: fromRight ? w + rand(0, w * 0.5) : rand(0, w),
     y: rand(0, h),
     s: size,
-    speed: rand(12, 48),
+    speed: rand(32, 110),
     color: COLORS[(Math.random() * COLORS.length) | 0],
     alpha: rand(0.35, 1),
   };

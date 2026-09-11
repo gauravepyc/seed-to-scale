@@ -64,3 +64,14 @@ body {
 .pixel-cube {
   transition: opacity 0.4s ease-out;
 }
+
+@keyframes cube-giggle {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(var(--cube-lo));
+  }
+}
+

@@ -1,10 +1,10 @@
 import { CanvasTexture, SRGBColorSpace } from "three";
 
-const CREAM = "#F7F4EE";
+const CREAM = "#EFE9E1";
 const INK = "#222222";
 const CORAL = "#FF7A61";
 const CORAL_DEEP = "#FF6B4A";
-const PAGE = "#FAF7F2";
+const PAGE = "#EFE9E1";
 
 function cssFont(name) {
   if (typeof document === "undefined") return "sans-serif";

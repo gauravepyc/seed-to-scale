@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import {
+  ACESFilmicToneMapping,
   AmbientLight,
   Clock,
   DirectionalLight,
@@ -9,9 +10,10 @@ import {
   HemisphereLight,
   MathUtils,
   Mesh,
-  PCFShadowMap,
+  PCFSoftShadowMap,
   PerspectiveCamera,
   PlaneGeometry,
+  PMREMGenerator,
   Raycaster,
   Scene,
   ShadowMaterial,
@@ -19,6 +21,7 @@ import {
   Vector2,
   WebGLRenderer,
 } from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import useTiltInput from "@/components/Reusable/useTiltInput";
 import { createBook } from "./createBook";
 
@@ -58,8 +61,10 @@ export default function BookCanvas({
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, interactive ? 2 : 1.25));
     renderer.shadowMap.enabled = interactive;
-    renderer.shadowMap.type = PCFShadowMap;
+    renderer.shadowMap.type = PCFSoftShadowMap;
     renderer.outputColorSpace = SRGBColorSpace;
+    renderer.toneMapping = ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.92;
     renderer.setClearColor(0x000000, 0);
 
     const scene = new Scene();
@@ -67,17 +72,17 @@ export default function BookCanvas({
     camera.position.set(0, 0, cameraDistance);
     camera.lookAt(0, 0, 0);
 
-    scene.add(new AmbientLight(0xffffff, 0.95));
-    scene.add(new HemisphereLight(0xfbf8f3, 0xc4b8a8, 0.4));
+    scene.add(new AmbientLight(0xefe9e1, 0.22));
+    scene.add(new HemisphereLight(0xefe9e1, 0xb8a894, 0.32));
 
-    const key = new DirectionalLight(0xffffff, interactive ? 0.55 : 0.7);
-    key.position.set(1.6, 5.2, 2.8);
+    const key = new DirectionalLight(0xefe9e1, interactive ? 0.72 : 0.88);
+    key.position.set(2.6, 3.8, 3.4);
     key.castShadow = interactive;
-    key.shadow.mapSize.set(512, 512);
-    key.shadow.radius = 12;
-    key.shadow.intensity = 0.35;
-    key.shadow.bias = -0.002;
-    key.shadow.normalBias = 0.04;
+    key.shadow.mapSize.set(1024, 1024);
+    key.shadow.radius = 8;
+    key.shadow.intensity = 0.28;
+    key.shadow.bias = -0.0015;
+    key.shadow.normalBias = 0.035;
     key.shadow.camera.near = 1;
     key.shadow.camera.far = 14;
     key.shadow.camera.left = -3.2;
@@ -85,6 +90,26 @@ export default function BookCanvas({
     key.shadow.camera.top = 3.2;
     key.shadow.camera.bottom = -3.2;
     scene.add(key);
+
+    const fill = new DirectionalLight(0xefe9e1, 0.28);
+    fill.position.set(-3.4, 1.6, 2.6);
+    scene.add(fill);
+
+    const rim = new DirectionalLight(0xefe9e1, 0.38);
+    rim.position.set(-1.4, 2.6, -3.6);
+    scene.add(rim);
+
+    const front = new DirectionalLight(0xefe9e1, 0.2);
+    front.position.set(0.15, 0.6, 4.4);
+    scene.add(front);
+
+    const pmrem = new PMREMGenerator(renderer);
+    const room = new RoomEnvironment();
+    const envMap = pmrem.fromScene(room, 0.04).texture;
+    scene.environment = envMap;
+    scene.environmentIntensity = 0.22;
+    room.dispose();
+    pmrem.dispose();
 
     const book = createBook(cover);
     book.meshes.forEach((mesh) => {
@@ -139,7 +164,11 @@ export default function BookCanvas({
       if (!interactive) return;
       setPointer(event);
       const index = pickPage();
-      if (index === null) return;
+      if (index === null) {
+        book.setPage(0);
+        book.highlight(null);
+        return;
+      }
       const opened = book.sheets[index].opened;
       book.setPage(opened ? index : index + 1);
       book.highlight(null);
@@ -218,6 +247,7 @@ export default function BookCanvas({
       book.dispose();
       ground.geometry.dispose();
       ground.material.dispose();
+      envMap.dispose();
       renderer.dispose();
       wrap.style.cursor = "default";
     };

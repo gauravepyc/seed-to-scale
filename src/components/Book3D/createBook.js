@@ -5,6 +5,7 @@ import {
   Float32BufferAttribute,
   Group,
   MathUtils,
+  MeshPhysicalMaterial,
   MeshStandardMaterial,
   Skeleton,
   SkinnedMesh,
@@ -58,7 +59,7 @@ pageGeometry.setAttribute(
   new Float32BufferAttribute(skinWeights, 4)
 );
 
-const whiteColor = new Color("white");
+const paperColor = new Color("#EFE9E1");
 const emissiveColor = new Color("#FF3621");
 
 const mattePaper = {
@@ -69,10 +70,10 @@ const mattePaper = {
 
 function createEdgeMaterials() {
   return [
-    new MeshStandardMaterial({ color: "#E8DFD0", ...mattePaper }),
+    new MeshStandardMaterial({ color: "#EFE9E1", ...mattePaper }),
     new MeshStandardMaterial({ color: "#1A1A1A", ...mattePaper, roughness: 0.88 }),
-    new MeshStandardMaterial({ color: "#F0EBE1", ...mattePaper }),
-    new MeshStandardMaterial({ color: "#E6DDD0", ...mattePaper }),
+    new MeshStandardMaterial({ color: "#EFE9E1", ...mattePaper }),
+    new MeshStandardMaterial({ color: "#E8E1D8", ...mattePaper }),
   ];
 }
 
@@ -106,25 +107,29 @@ function createSkinnedPage(number, front, back, pageCount, edgeMaterials) {
   const picture = createPageTexture(front);
   const picture2 = createPageTexture(back);
   const isCover = number === 0 || number === pageCount - 1;
-  const roughness = isCover ? 0.9 : 0.84;
+  const roughness = isCover ? 0.62 : 0.86;
 
   const materials = [
     ...edgeMaterials,
-    new MeshStandardMaterial({
-      color: whiteColor,
+    new MeshPhysicalMaterial({
+      color: paperColor,
       map: picture,
       roughness,
       metalness: 0,
-      envMapIntensity: isCover ? 0.16 : 0.1,
+      clearcoat: isCover ? 0.38 : 0.12,
+      clearcoatRoughness: isCover ? 0.28 : 0.52,
+      envMapIntensity: isCover ? 0.55 : 0.22,
       emissive: emissiveColor,
       emissiveIntensity: 0,
     }),
-    new MeshStandardMaterial({
-      color: whiteColor,
+    new MeshPhysicalMaterial({
+      color: paperColor,
       map: picture2,
       roughness,
       metalness: 0,
-      envMapIntensity: isCover ? 0.16 : 0.1,
+      clearcoat: isCover ? 0.38 : 0.12,
+      clearcoatRoughness: isCover ? 0.28 : 0.52,
+      envMapIntensity: isCover ? 0.55 : 0.22,
       emissive: emissiveColor,
       emissiveIntensity: 0,
     }),

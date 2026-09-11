@@ -95,7 +95,7 @@ export default function Featuredv2() {
           data-featured-book
           className="absolute inset-0 z-10 origin-center will-change-transform"
         >
-          <BookCanvas />
+          <BookCanvas cursorHint />
         </div>
       </div>
     </section>

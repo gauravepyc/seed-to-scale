@@ -40,9 +40,11 @@ export default function BookCanvas({
   interactive = true,
   restRotation = [0, 0, 0],
   cameraDistance = 3.7,
+  cursorHint = false,
 }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
+  const hintRef = useRef(null);
   const tilt = useTiltInput(wrapRef);
   const cover = COVERS[variant] ?? "cover";
   const [restX, restY, restZ] = restRotation;
@@ -141,6 +143,31 @@ export default function BookCanvas({
       return hits[0].object.userData.pageIndex;
     };
 
+    const hintTarget = { x: 0, y: 0 };
+    const hintPos = { x: 0, y: 0 };
+    let hintShow = false;
+    let hintVis = 0;
+
+    const applyHint = (hint) => {
+      const scale = 0.82 + 0.18 * hintVis;
+      hint.style.opacity = String(hintVis);
+      hint.style.transform = `translate3d(${hintPos.x}px, ${hintPos.y}px, 0) translate(-50%, -50%) scale(${scale})`;
+    };
+
+    const moveHint = (event, onBook) => {
+      const hint = hintRef.current;
+      if (!cursorHint || !hint) return;
+      hintShow = onBook && !book.sheets[0].opened;
+      if (!hintShow) return;
+      const rect = wrap.getBoundingClientRect();
+      hintTarget.x = event.clientX - rect.left;
+      hintTarget.y = event.clientY - rect.top;
+      if (hintVis < 0.02) {
+        hintPos.x = hintTarget.x;
+        hintPos.y = hintTarget.y;
+      }
+    };
+
     const onMove = (event) => {
       if (!interactive) return;
       setPointer(event);
@@ -148,6 +175,7 @@ export default function BookCanvas({
       hovering = index !== null;
       wrap.style.cursor = hovering ? "pointer" : "default";
       book.highlight(index);
+      moveHint(event, hovering);
     };
 
     const onClick = (event) => {
@@ -162,12 +190,14 @@ export default function BookCanvas({
       const opened = book.sheets[index].opened;
       book.setPage(opened ? index : index + 1);
       book.highlight(null);
+      hintShow = false;
     };
 
     const onLeave = () => {
       hovering = false;
       wrap.style.cursor = "default";
       book.highlight(null);
+      hintShow = false;
     };
 
     const resize = () => {
@@ -183,6 +213,15 @@ export default function BookCanvas({
       const rawDelta = clock.getDelta();
       const delta = Math.min(rawDelta, 1 / 30);
       book.update(delta);
+
+      if (cursorHint && hintRef.current) {
+        const followHint = 1 - Math.exp(-12 * delta);
+        const openHint = 1 - Math.exp(-9 * delta);
+        hintVis += ((hintShow ? 1 : 0) - hintVis) * openHint;
+        hintPos.x += (hintTarget.x - hintPos.x) * followHint;
+        hintPos.y += (hintTarget.y - hintPos.y) * followHint;
+        applyHint(hintRef.current);
+      }
 
       const tx = tilt.current.x;
       const ty = tilt.current.y;
@@ -240,11 +279,19 @@ export default function BookCanvas({
       renderer.dispose();
       wrap.style.cursor = "default";
     };
-  }, [tilt, cover, interactive, restX, restY, restZ, cameraDistance]);
+  }, [tilt, cover, interactive, restX, restY, restZ, cameraDistance, cursorHint]);
 
   return (
-    <div ref={wrapRef} className="h-full w-full touch-pan-y">
+    <div ref={wrapRef} className="relative h-full w-full touch-pan-y">
       <canvas ref={canvasRef} className="block h-full w-full" />
+      {cursorHint ? (
+        <span
+          ref={hintRef}
+          className="pointer-events-none absolute top-0 left-0 z-20 origin-center will-change-transform whitespace-nowrap bg-background px-[0.7vw] py-[0.32vw] text-[0.7vw] uppercase tracking-[0.14em] text-foreground opacity-0 max-md:text-[10px]"
+        >
+          Click to open
+        </span>
+      ) : null}
     </div>
   );
 }

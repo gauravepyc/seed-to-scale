@@ -8,6 +8,7 @@ import FaqV2 from '@/components/Homepage2/FAQsV2'
 import AboutV2 from '@/components/Homepage2/AboutV2'
 import FrameworkV2 from '@/components/Homepage2/FrameworkV2'
 import GooeyLayers from '@/components/Homepage2/GooeyLayers'
+import CubeIntrerationsection from '@/components/Homepage2/CubeIntrerationsection'
 
 export default function page() {
     return (

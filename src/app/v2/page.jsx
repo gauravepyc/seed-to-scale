@@ -16,8 +16,8 @@ export default function page() {
                 <span className='absolute h-full w-px bg-foreground/25 left-[5vw] top-0' />
                 <span className='absolute h-full w-px bg-foreground/25 right-[5vw] top-0' />
                 <Herov2 />
-                {/* <CubeIntrerationsection /> */}
-                <GooeyLayers />
+                <CubeIntrerationsection />
+                {/* <GooeyLayers /> */}
                 <Featuredv2 />
                 <Libraryv2 />
                 <StatsV2 />

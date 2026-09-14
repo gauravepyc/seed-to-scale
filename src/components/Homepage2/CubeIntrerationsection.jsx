@@ -43,27 +43,13 @@ const GLYPHS = {
   F: ["11110", "10000", "11100", "10000", "10000"],
 };
 
-function lastBottomCol(rowsG) {
-  const bottom = rowsG[rowsG.length - 1];
-  for (let i = bottom.length - 1; i >= 0; i--) {
-    if (bottom[i] === "1") return i;
-  }
-  return bottom.length - 1;
-}
-
-function groupWidth(ch, gap) {
-  const rowsG = GLYPHS[ch];
-  const gw = rowsG[0].length;
-  const dotCol = lastBottomCol(rowsG) + 1 + gap;
-  return Math.max(gw, dotCol + 1);
-}
-
 function stampTWF(field, cols, rows) {
   const letters = ["T", "W", "F"];
   const gh = 5;
   const gap = 1;
   const unitsW = letters.reduce(
-    (w, ch, i) => w + groupWidth(ch, gap) + (i < letters.length - 1 ? gap : 0),
+    (w, ch, i) =>
+      w + GLYPHS[ch][0].length + (i < letters.length - 1 ? gap : 0),
     0
   );
   const scale = Math.max(
@@ -97,11 +83,7 @@ function stampTWF(field, cols, rows) {
         paintCell(cursor + gx * cellW, oy + gy * cellH);
       }
     }
-    paintCell(
-      cursor + (lastBottomCol(rowsG) + 1 + gap) * cellW,
-      oy + (gh - 1) * cellH
-    );
-    cursor += (groupWidth(ch, gap) + (i < letters.length - 1 ? gap : 0)) * cellW;
+    cursor += (gw + (i < letters.length - 1 ? gap : 0)) * cellW;
   });
 
   field.letter = letter;

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 800" fill="none">
+  <rect width="2400" height="800" fill="#FBF8F3"/>
+  <text
+    x="1200"
+    y="390"
+    text-anchor="middle"
+    fill="#222222"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="132"
+    letter-spacing="-3"
+  >The Working Files</text>
+  <text
+    x="1200"
+    y="470"
+    text-anchor="middle"
+    fill="#FF3621"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="22"
+    letter-spacing="8"
+  >FOR AI BUILDERS</text>
+</svg>

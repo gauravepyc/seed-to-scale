@@ -22,6 +22,12 @@ const CONFIG = {
     minCols: 8,
     minRows: 6,
   },
+  lock: {
+    top: 2,
+    side:3.5,
+    bottom: 3,
+    jitter: .2,
+  },
   trail: {
     spread: 2,
     stamps: 6,
@@ -75,6 +81,22 @@ function cubeRgb(seed, lit) {
   );
 }
 
+function lockChance(x, y, cols, rows) {
+  const { top, side, bottom, jitter } = CONFIG.lock;
+  const topD = Math.max(0.4, top + (hash(x * 17 + 3) - 0.5) * 2 * jitter);
+  const botD = Math.max(0.4, bottom + (hash(x * 23 + 9) - 0.5) * 2 * jitter);
+  const leftD = Math.max(0.4, side + (hash(y * 19 + 5) - 0.5) * 2 * jitter);
+  const rightD = Math.max(0.4, side + (hash(y * 29 + 11) - 0.5) * 2 * jitter);
+  const p = Math.max(
+    1 - (y + 0.5) / topD,
+    1 - (rows - y - 0.5) / botD,
+    1 - (x + 0.5) / leftD,
+    1 - (cols - x - 0.5) / rightD
+  );
+  if (p <= 0) return 0;
+  return hash(x * 47 + y * 13 + 71) < p * 0.58 ? 1 : 0;
+}
+
 function buildField(cols, rows) {
   const n = cols * rows;
   const restR = new Uint8Array(n);
@@ -82,6 +104,7 @@ function buildField(cols, rows) {
   const restB = new Uint8Array(n);
   const cover = new Float32Array(n);
   const fading = new Uint8Array(n);
+  const locked = new Uint8Array(n);
   const { litMin, litMax } = CONFIG.cube;
 
   for (let y = 0; y < rows; y++) {
@@ -107,10 +130,11 @@ function buildField(cols, rows) {
       restG[i] = rgb.g;
       restB[i] = rgb.b;
       cover[i] = 1;
+      locked[i] = lockChance(x, y, cols, rows);
     }
   }
 
-  return { restR, restG, restB, cover, fading, dirty: [] };
+  return { restR, restG, restB, cover, fading, locked, dirty: [] };
 }
 
 export default function CubeImageReveal() {
@@ -160,7 +184,7 @@ export default function CubeImageReveal() {
     const reveal = (x, y) => {
       if (x < 0 || y < 0 || x >= cols || y >= rows) return;
       const i = y * cols + x;
-      if (field.cover[i] <= 0) return;
+      if (field.locked[i] || field.cover[i] <= 0) return;
       if (!field.fading[i]) {
         field.fading[i] = 1;
         field.dirty.push(i);

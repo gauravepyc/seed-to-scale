@@ -8,32 +8,24 @@ import SplitText from "@/components/Reusable/SplitText";
 
 gsap.registerPlugin(useGSAP);
 
-const LAYERS = 5;
-const MOVE = 0.02;
-const TILT_X = 3;
-const TILT_Y = 4;
+const REST_Y_EM = -0.04;
+const MAX_EM = 0.035;
 
 function OffsetLine({ children, className = "" }) {
   return (
-    <span
-      data-hero-line
-      className={`relative mx-auto block w-fit [transform-style:preserve-3d] ${className}`}
-    >
-      {Array.from({ length: LAYERS }, (_, i) => (
-        <span
-          key={i}
-          data-hero-extrude
-          aria-hidden="true"
-          className="pointer-events-none absolute left-0 top-0 select-none text-foreground will-change-transform"
-          style={{
-            transform:
-              "translate3d(calc(var(--ex) * var(--i) * var(--depth)), calc(var(--ey) * var(--i) * var(--depth)), calc(var(--i) * -1.6px))",
-            "--i": i + 1,
-          }}
-        >
-          {children}
-        </span>
-      ))}
+    <span className={`relative mx-auto block w-fit ${className}`}>
+      <span
+        data-hero-stroke
+        aria-hidden="true"
+        className="pointer-events-none absolute left-0 top-0 select-none will-change-transform"
+        style={{
+          color: "transparent",
+          WebkitTextFillColor: "transparent",
+          WebkitTextStroke: "0.005em #FF3621",
+        }}
+      >
+        {children}
+      </span>
       <span className="relative">{children}</span>
     </span>
   );
@@ -46,69 +38,38 @@ export default function Herov2() {
     () => {
       const section = sectionRef.current;
       const heading = section.querySelector("[data-hero-title]");
-      const lines = gsap.utils.toArray("[data-hero-line]");
-      if (!section || !heading || !lines.length) return;
+      const strokes = gsap.utils.toArray("[data-hero-stroke]");
+      if (!section || !heading || !strokes.length) return;
 
       const emPx = () => parseFloat(getComputedStyle(heading).fontSize);
-      const pose = { ex: 0, ey: 0, rx: 0, ry: 0, depth: 0 };
+      const restY = () => REST_Y_EM * emPx();
+      const max = () => MAX_EM * emPx();
 
-      const apply = () => {
-        heading.style.setProperty("--ex", `${pose.ex}px`);
-        heading.style.setProperty("--ey", `${pose.ey}px`);
-        heading.style.setProperty("--depth", String(pose.depth));
-        heading.style.transform = `rotateX(${pose.rx}deg) rotateY(${pose.ry}deg)`;
-      };
-
-      gsap.set(heading, {
-        transformPerspective: 900,
-        transformOrigin: "50% 50%",
-      });
-      gsap.set(lines, { rotateX: 72, z: -80, opacity: 0, transformOrigin: "50% 100%" });
-      apply();
-
-      const tl = gsap.timeline({ delay: 0.12 });
-      tl.to(lines, {
-        rotateX: 0,
-        z: 0,
-        opacity: 1,
-        duration: 1.05,
-        stagger: 0.11,
-        ease: "power3.out",
-      }).to(
-        pose,
-        {
-          depth: 1,
-          duration: 0.7,
-          ease: "power2.out",
-          onUpdate: apply,
-        },
-        "-=0.55"
-      );
-
-      const toEx = gsap.quickTo(pose, "ex", {
-        duration: 0.5,
-        ease: "power3.out",
-        onUpdate: apply,
-      });
-      const toEy = gsap.quickTo(pose, "ey", {
-        duration: 0.5,
-        ease: "power3.out",
-        onUpdate: apply,
-      });
-      const toRx = gsap.quickTo(pose, "rx", {
-        duration: 0.55,
-        ease: "power3.out",
-        onUpdate: apply,
-      });
-      const toRy = gsap.quickTo(pose, "ry", {
-        duration: 0.55,
-        ease: "power3.out",
-        onUpdate: apply,
-      });
+      gsap.set(strokes, { opacity: 0, x: 0, y: 0 });
 
       let armed = false;
-      tl.eventCallback("onComplete", () => {
-        armed = true;
+      let xTos = [];
+      let yTos = [];
+
+      const tl = gsap.timeline({
+        delay: 0.15,
+        onComplete() {
+          xTos = strokes.map((el) =>
+            gsap.quickTo(el, "x", { duration: 0.45, ease: "power3.out" })
+          );
+          yTos = strokes.map((el) =>
+            gsap.quickTo(el, "y", { duration: 0.45, ease: "power3.out" })
+          );
+          armed = true;
+        },
+      });
+
+      tl.to(strokes, {
+        opacity: 1,
+        y: () => restY(),
+        duration: 0.9,
+        stagger: 0.12,
+        ease: "power3.out",
       });
 
       const onMove = (e) => {
@@ -116,25 +77,28 @@ export default function Herov2() {
         const rect = heading.getBoundingClientRect();
         const nx = Math.max(
           -1,
-          Math.min(1, (e.clientX - (rect.left + rect.width / 2)) / Math.max(rect.width / 2, 1))
+          Math.min(
+            1,
+            (e.clientX - (rect.left + rect.width / 2)) / Math.max(rect.width / 2, 1)
+          )
         );
         const ny = Math.max(
           -1,
-          Math.min(1, (e.clientY - (rect.top + rect.height / 2)) / Math.max(rect.height / 2, 1))
+          Math.min(
+            1,
+            (e.clientY - (rect.top + rect.height / 2)) / Math.max(rect.height / 2, 1)
+          )
         );
-        const size = emPx();
-        toEx(nx * MOVE * size);
-        toEy(ny * MOVE * size);
-        toRx(-ny * TILT_X);
-        toRy(nx * TILT_Y);
+        const x = nx * max();
+        const y = restY() + ny * max();
+        xTos.forEach((to) => to(x));
+        yTos.forEach((to) => to(y));
       };
 
       const onLeave = () => {
         if (!armed) return;
-        toEx(0);
-        toEy(0);
-        toRx(0);
-        toRy(0);
+        xTos.forEach((to) => to(0));
+        yTos.forEach((to) => to(restY()));
       };
 
       section.addEventListener("mousemove", onMove);
@@ -155,10 +119,10 @@ export default function Herov2() {
       ref={sectionRef}
       className="flex h-fit w-full mt-[5vw] border-b border-foreground/25 bg-background max-md:h-auto max-md:flex-col max-md:pt-28"
     >
-      <div className="flex w-1/2 items-center justify-center px-[2vw] [perspective:56vw] max-md:w-full max-md:px-0 max-md:py-16">
+      <div className="flex w-1/2 items-center justify-center px-[2vw] max-md:w-full max-md:px-0 max-md:py-16">
         <h1
           data-hero-title
-          className="mx-auto w-fit text-center text-[7.5vw] leading-[0.84] tracking-tighter text-primary [transform-style:preserve-3d] max-md:text-[14vw]"
+          className="mx-auto w-fit text-center text-[7.5vw] leading-[0.82] tracking-tighter text-primary max-md:text-[18vw]"
         >
           <OffsetLine>The</OffsetLine>
           <OffsetLine>Working</OffsetLine>

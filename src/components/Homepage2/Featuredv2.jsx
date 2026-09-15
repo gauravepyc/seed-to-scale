@@ -99,7 +99,7 @@ export default function Featuredv2() {
             cursorHint
             restRotation={[0.1, -0.42, -0.05]}
           
-            cameraDistance={4}
+            cameraDistance={4.2}
           />
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import gsap from "gsap";
 
 const CONFIG = {
   copy: {
@@ -14,7 +15,7 @@ const CONFIG = {
     titleClass:
       "font-sans text-[6vw] font-medium leading-none tracking-tight text-foreground",
     bodyClass:
-      "mt-[1.2vw] max-w-[40vw]  font-sans text-[1.5vw] leading-snug text-primary",
+      "mt-[1.2vw] w-full font-sans text-[1.5vw] leading-snug text-primary",
   },
   grid: {
     cell: 40,
@@ -137,6 +138,8 @@ function buildField(cols, rows) {
   return { restR, restG, restB, cover, fading, locked, dirty: [] };
 }
 
+const MAX_EM = 0.035;
+
 export default function CubeImageReveal() {
   const sectionRef = useRef(null);
   const canvasRef = useRef(null);
@@ -149,6 +152,70 @@ export default function CubeImageReveal() {
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
     canvas.style.background = "transparent";
+
+    const title = section.querySelector("[data-cube-title]");
+    const strokes = title
+      ? Array.from(title.querySelectorAll("[data-cube-stroke]"))
+      : [];
+    const emPx = () =>
+      title ? parseFloat(getComputedStyle(title).fontSize) : 16;
+    const max = () => MAX_EM * emPx();
+    let strokeArmed = false;
+    let xTos = [];
+    let yTos = [];
+    let strokeTl = null;
+
+    if (strokes.length) {
+      gsap.set(strokes, { opacity: 0, x: 0, y: 0 });
+      strokeTl = gsap.timeline({
+        delay: 0.15,
+        onComplete() {
+          xTos = strokes.map((el) =>
+            gsap.quickTo(el, "x", { duration: 0.45, ease: "power3.out" })
+          );
+          yTos = strokes.map((el) =>
+            gsap.quickTo(el, "y", { duration: 0.45, ease: "power3.out" })
+          );
+          strokeArmed = true;
+        },
+      });
+      strokeTl.to(strokes, {
+        opacity: 1,
+        duration: 0.9,
+        ease: "power3.out",
+      });
+    }
+
+    const moveStroke = (event) => {
+      if (!strokeArmed || !title) return;
+      const box = title.getBoundingClientRect();
+      const nx = Math.max(
+        -1,
+        Math.min(
+          1,
+          (event.clientX - (box.left + box.width / 2)) /
+            Math.max(box.width / 2, 1)
+        )
+      );
+      const ny = Math.max(
+        -1,
+        Math.min(
+          1,
+          (event.clientY - (box.top + box.height / 2)) /
+            Math.max(box.height / 2, 1)
+        )
+      );
+      const x = nx * max();
+      const y = ny * max();
+      xTos.forEach((to) => to(x));
+      yTos.forEach((to) => to(y));
+    };
+
+    const resetStroke = () => {
+      if (!strokeArmed) return;
+      xTos.forEach((to) => to(0));
+      yTos.forEach((to) => to(0));
+    };
 
     const prepCtx = () => {
       ctx.imageSmoothingEnabled = false;
@@ -348,6 +415,7 @@ export default function CubeImageReveal() {
     };
 
     const onMove = (event) => {
+      moveStroke(event);
       const { col, row } = cellFromEvent(event);
       if (col === lastCol && row === lastRow) return;
       if (lastCol < 0) {
@@ -373,6 +441,7 @@ export default function CubeImageReveal() {
     const onLeave = () => {
       lastCol = -1;
       lastRow = -1;
+      resetStroke();
     };
 
     const onClick = (event) => {
@@ -411,6 +480,7 @@ export default function CubeImageReveal() {
     return () => {
       visible = false;
       cancelAnimationFrame(raf);
+      strokeTl?.kill();
       ro.disconnect();
       io.disconnect();
       canvas.removeEventListener("pointerenter", cacheRect);
@@ -423,12 +493,27 @@ export default function CubeImageReveal() {
 
   return (
     <section ref={sectionRef} className={CONFIG.layout.sectionClass}>
-      <div className="pointer-events-none absolute  inset-0 z-0 flex flex-col items-center justify-center px-[5vw] text-center">
-        <p className={CONFIG.layout.titleClass}>{CONFIG.copy.title}</p>
+      <div className="pointer-events-none absolute inset-0 z-0 flex flex-col items-center justify-center px-[5vw] text-center">
+        <p
+          data-cube-title
+          className={`${CONFIG.layout.titleClass} relative mx-auto w-fit`}
+        >
+          <span
+            data-cube-stroke
+            aria-hidden="true"
+            className="pointer-events-none absolute left-0 top-0 select-none will-change-transform"
+            style={{
+              color: "transparent",
+              WebkitTextFillColor: "transparent",
+              WebkitTextStroke: "0.012em #222222",
+            }}
+          >
+            {CONFIG.copy.title}
+          </span>
+          <span className="relative">{CONFIG.copy.title}</span>
+        </p>
         <p className={CONFIG.layout.bodyClass}>
-          {CONFIG.copy.line1}
-          <br />
-          {CONFIG.copy.line2}
+          {CONFIG.copy.line1} {CONFIG.copy.line2}
         </p>
       </div>
       <canvas

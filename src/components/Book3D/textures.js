@@ -1,4 +1,5 @@
 import { CanvasTexture, SRGBColorSpace } from "three";
+import { CONFIG } from "./config";
 
 const CREAM = "#F6F2EC";
 const INK = "#222222";
@@ -58,10 +59,10 @@ function drawCoverFrame(ctx, w, h) {
   ctx.strokeRect(28, 28, w - 56, h - 56);
 }
 
-function drawSeriesLabel(ctx, number) {
+function drawSeriesLabel(ctx, number, series = CONFIG.series) {
   ctx.fillStyle = INK;
   ctx.font = avenir(500, 28);
-  ctx.fillText(`THE WORKING FILES  ·  ${number}`, 64, 110);
+  ctx.fillText(`${series}  ·  ${number}`, 64, 110);
 }
 
 function drawFilledBadge(ctx, w, label) {
@@ -142,14 +143,14 @@ function drawStamp(ctx, x, y, rotation) {
   ctx.restore();
 }
 
-function drawCoverTitles(ctx, w, h, lines) {
+function drawCoverTitles(ctx, w, h, lines, author = CONFIG.author) {
   ctx.fillStyle = INK;
   ctx.font = glare(400, 72);
   lines.forEach((line, i) => {
     ctx.fillText(line, 64, h - 220 + i * 80);
   });
   ctx.font = avenir(500, 22);
-  ctx.fillText("TARUN RAHEJA  ·  ACCEL", 64, h - 84);
+  ctx.fillText(author, 64, h - 84);
 }
 
 function drawFrontierArt(ctx, w) {
@@ -211,21 +212,21 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
   if (line) ctx.fillText(line, x, cursorY);
 }
 
-function drawCover(ctx, w, h) {
+function drawCover(ctx, w, h, content = CONFIG) {
+  const { number, badge, title } = content.cover;
   ctx.fillStyle = CREAM;
   ctx.fillRect(0, 0, w, h);
   ctx.strokeStyle = INK;
   ctx.lineWidth = 4;
   ctx.strokeRect(28, 28, w - 56, h - 56);
 
-  ctx.fillStyle = INK;
-  ctx.font = avenir(500, 28);
-  ctx.fillText("THE WORKING FILES  ·  01", 64, 110);
+  drawSeriesLabel(ctx, number, content.series);
 
+  ctx.fillStyle = INK;
   ctx.fillRect(w - 168, 72, 92, 36);
   ctx.fillStyle = CREAM;
   ctx.font = avenir(500, 20);
-  ctx.fillText("V1.2", w - 148, 97);
+  ctx.fillText(badge, w - 148, 97);
 
   const artX = 150;
   const artY = 180;
@@ -277,62 +278,73 @@ function drawCover(ctx, w, h) {
     );
   }
 
-  ctx.fillStyle = INK;
-  ctx.font = glare(400, 72);
-  ctx.fillText("Harness", 64, h - 220);
-  ctx.fillText("Engineering", 64, h - 140);
-  ctx.font = avenir(500, 22);
-  ctx.fillText("TARUN RAHEJA  ·  ACCEL", 64, h - 84);
+  drawCoverTitles(ctx, w, h, title, content.author);
 }
 
-function drawFrontierCover(ctx, w, h) {
+function drawFrontierCover(ctx, w, h, content = CONFIG) {
+  const variant = content.variants.frontier;
   drawCoverFrame(ctx, w, h);
-  drawSeriesLabel(ctx, "02");
-  drawOutlineBadge(ctx, w, "DRAFT");
+  drawSeriesLabel(ctx, variant.number, content.series);
+  drawOutlineBadge(ctx, w, variant.badge);
   drawFrontierArt(ctx, w);
-  drawCoverTitles(ctx, w, h, ["Frontier Model", "Capabilities"]);
+  drawCoverTitles(ctx, w, h, variant.title, content.author);
   drawStamp(ctx, w * 0.7, h - 310, -0.32);
 }
 
-function drawTeamsCover(ctx, w, h) {
+function drawTeamsCover(ctx, w, h, content = CONFIG) {
+  const variant = content.variants.teams;
   drawCoverFrame(ctx, w, h);
-  drawSeriesLabel(ctx, "03");
-  drawOutlineBadge(ctx, w, "DRAFT");
+  drawSeriesLabel(ctx, variant.number, content.series);
+  drawOutlineBadge(ctx, w, variant.badge);
   drawTeamsArt(ctx, w);
   ctx.fillStyle = INK;
   ctx.font = glare(400, 64);
-  ctx.fillText("AI-Maximal", 64, h - 240);
-  ctx.fillText("Teams in Practice", 64, h - 160);
+  variant.title.forEach((line, i) => {
+    ctx.fillText(line, 64, h - 240 + i * 80);
+  });
   ctx.font = avenir(500, 22);
-  ctx.fillText("TARUN RAHEJA  ·  ACCEL", 64, h - 84);
+  ctx.fillText(content.author, 64, h - 84);
   drawStamp(ctx, w * 0.7, h - 310, -0.28);
 }
 
-function drawPage(ctx, w, h, { kicker, heading, body }) {
-  ctx.fillStyle = PAGE;
+function drawPage(ctx, w, h, page) {
+  const black = Boolean(page?.black);
+  const bg = black ? INK : PAGE;
+  const ink = black ? CREAM : INK;
+  const muted = black ? "rgba(246,242,236,0.5)" : "rgba(34,34,34,0.45)";
+  const border = black ? "rgba(246,242,236,0.22)" : "rgba(34,34,34,0.16)";
+
+  ctx.fillStyle = bg;
   ctx.fillRect(0, 0, w, h);
-  ctx.strokeStyle = "rgba(34,34,34,0.16)";
+  ctx.strokeStyle = border;
   ctx.lineWidth = 2;
   ctx.strokeRect(40, 40, w - 80, h - 80);
 
-  ctx.fillStyle = "rgba(34,34,34,0.45)";
-  ctx.font = avenir(500, 22);
-  ctx.fillText(kicker, 80, 120);
-
-  if (heading) {
-    ctx.fillStyle = INK;
-    ctx.font = glare(400, 54);
-    wrapText(ctx, heading, 80, 220, w - 160, 64);
+  if (page?.kicker) {
+    ctx.fillStyle = muted;
+    ctx.font = avenir(500, 22);
+    ctx.fillText(page.kicker, 80, 120);
   }
 
-  if (body) {
-    ctx.fillStyle = INK;
+  if (page?.heading) {
+    ctx.fillStyle = ink;
+    ctx.font = glare(400, 54);
+    wrapText(ctx, page.heading, 80, 220, w - 160, 64);
+  }
+
+  if (page?.body) {
+    ctx.fillStyle = ink;
     ctx.font = sans(400, 28);
-    wrapText(ctx, body, 80, heading ? 420 : 220, w - 160, 42);
+    wrapText(ctx, page.body, 80, page.heading ? 420 : 220, w - 160, 42);
   }
 }
 
-function drawBackCover(ctx, w, h) {
+function drawBlank(ctx, w, h, black) {
+  ctx.fillStyle = black ? INK : PAGE;
+  ctx.fillRect(0, 0, w, h);
+}
+
+function drawBackCover(ctx, w, h, content = CONFIG) {
   ctx.fillStyle = CREAM;
   ctx.fillRect(0, 0, w, h);
   ctx.strokeStyle = INK;
@@ -340,44 +352,45 @@ function drawBackCover(ctx, w, h) {
   ctx.strokeRect(28, 28, w - 56, h - 56);
   ctx.fillStyle = INK;
   ctx.font = glare(400, 36);
-  ctx.fillText("The Working Files", 80, h / 2 - 20);
+  ctx.fillText(content.back.title, 80, h / 2 - 20);
   ctx.font = avenir(500, 20);
-  ctx.fillText("ACCEL  ·  01", 80, h / 2 + 24);
+  ctx.fillText(content.back.credit, 80, h / 2 + 24);
 }
 
-const drawings = {
-  cover: drawCover,
-  "cover-frontier": drawFrontierCover,
-  "cover-teams": drawTeamsCover,
-  contents: (ctx, w, h) =>
-    drawPage(ctx, w, h, {
-      kicker: "CONTENTS",
-      heading: "Inside this file",
-      body: "A working note on harnesses, model rent, and where the margin actually lives.",
-    }),
-  quote: (ctx, w, h) =>
-    drawPage(ctx, w, h, {
-      kicker: "THE FILE",
-      heading: "Harness Engineering",
-      body: "A frontier model is rented. It gets smarter on its own, with every release. The harness around it is what you actually build, and it's where the margin lives.",
-    }),
-  notes: (ctx, w, h) =>
-    drawPage(ctx, w, h, {
-      kicker: "NOTE",
-      heading: "Build the harness.",
-      body: "Tarun Raheja · Accel. Verified Aug 2026. Last edited 12 Aug 2026.",
-    }),
-  blank: (ctx, w, h) => {
-    ctx.fillStyle = PAGE;
-    ctx.fillRect(0, 0, w, h);
-  },
-  backcover: drawBackCover,
-};
+function drawSide(ctx, w, h, side, content) {
+  if (!side) return;
+  if (side.kind === "page") {
+    drawPage(ctx, w, h, side);
+    return;
+  }
+  if (side.kind === "blank") {
+    drawBlank(ctx, w, h, side.black);
+    return;
+  }
+  makeDrawings(content)[side.kind]?.(ctx, w, h);
+}
+
+function makeDrawings(content) {
+  return {
+    cover: (ctx, w, h) => drawCover(ctx, w, h, content),
+    "cover-frontier": (ctx, w, h) => drawFrontierCover(ctx, w, h, content),
+    "cover-teams": (ctx, w, h) => drawTeamsCover(ctx, w, h, content),
+    backcover: (ctx, w, h) => drawBackCover(ctx, w, h, content),
+  };
+}
 
 const canvasCache = new Map();
 
-export function createPageTexture(id) {
-  let canvas = canvasCache.get(id);
+export function createPageTexture(side, content = CONFIG) {
+  const key = JSON.stringify({
+    side,
+    series: content.series,
+    author: content.author,
+    cover: content.cover,
+    back: content.back,
+    variants: content.variants,
+  });
+  let canvas = canvasCache.get(key);
   if (!canvas) {
     const w = 1024;
     const h = 1370;
@@ -387,8 +400,8 @@ export function createPageTexture(id) {
     const ctx = canvas.getContext("2d");
     ctx.fillStyle = PAGE;
     ctx.fillRect(0, 0, w, h);
-    drawings[id]?.(ctx, w, h);
-    canvasCache.set(id, canvas);
+    drawSide(ctx, w, h, side, content);
+    canvasCache.set(key, canvas);
   }
 
   const texture = new CanvasTexture(canvas);

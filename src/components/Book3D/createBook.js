@@ -12,14 +12,11 @@ import {
   Uint16BufferAttribute,
   Vector3,
 } from "three";
-import { pages } from "./UI";
+import { CONFIG } from "./config";
 import { createPageTexture } from "./textures";
 
 const easingFactor = 0.5;
-const easingFactorFold = 0.3;
-const insideCurveStrength = 0.18;
-const outsideCurveStrength = 0.05;
-const turningCurveStrength = 0.09;
+const PAGE_CLOSED_Y = Math.PI / 2;
 
 export const PAGE_WIDTH = 1.28;
 export const PAGE_HEIGHT = 1.71;
@@ -94,7 +91,35 @@ function degToRad(deg) {
   return (deg * Math.PI) / 180;
 }
 
-function createSkinnedPage(number, front, back, pageCount, edgeMaterials) {
+function pageSide(page, index) {
+  return {
+    kind: "page",
+    kicker: page.kicker ?? "",
+    heading: page.heading ?? "",
+    body: page.body ?? "",
+    black: Boolean(page.black),
+    slot: index + 1,
+  };
+}
+
+function sheetsFromPages(content, coverKind) {
+  const pages = content.pages ?? [];
+  const sheets = [
+    {
+      front: { kind: coverKind },
+      back: pages[0] ? pageSide(pages[0], 0) : { kind: "backcover" },
+    },
+  ];
+  for (let i = 1; i < pages.length; i += 2) {
+    sheets.push({
+      front: pageSide(pages[i], i),
+      back: pages[i + 1] ? pageSide(pages[i + 1], i + 1) : { kind: "backcover" },
+    });
+  }
+  return sheets;
+}
+
+function createSkinnedPage(number, front, back, pageCount, edgeMaterials, content) {
   const bones = [];
   for (let i = 0; i <= PAGE_SEGMENTS; i++) {
     const bone = new Bone();
@@ -104,8 +129,8 @@ function createSkinnedPage(number, front, back, pageCount, edgeMaterials) {
   }
 
   const skeleton = new Skeleton(bones);
-  const picture = createPageTexture(front);
-  const picture2 = createPageTexture(back);
+  const picture = createPageTexture(front, content);
+  const picture2 = createPageTexture(back, content);
   const isCover = number === 0 || number === pageCount - 1;
   const roughness = isCover ? 0.32 : 0.68;
 
@@ -146,12 +171,10 @@ function createSkinnedPage(number, front, back, pageCount, edgeMaterials) {
 }
 
 class PageSheet {
-  constructor(number, front, back, pageCount, edgeMaterials) {
+  constructor(number, front, back, pageCount, edgeMaterials, content) {
     this.number = number;
     this.opened = false;
-    this.lastOpened = false;
     this.highlighted = false;
-    this.turnedAt = 0;
     this.group = new Group();
     this.group.rotation.y = Math.PI / 2;
     this.mesh = createSkinnedPage(
@@ -159,9 +182,11 @@ class PageSheet {
       front,
       back,
       pageCount,
-      edgeMaterials
+      edgeMaterials,
+      content
     );
     this.group.add(this.mesh);
+    this.openY = -((content.openAngle ?? 50) * Math.PI) / 180;
   }
 
   setState({ opened, page, bookClosed }) {
@@ -179,15 +204,7 @@ class PageSheet {
         0.22
       );
 
-    if (this.lastOpened !== this.opened) {
-      this.turnedAt = Date.now();
-      this.lastOpened = this.opened;
-    }
-
-    let turningTime = Math.min(400, Date.now() - this.turnedAt) / 400;
-    turningTime = Math.sin(turningTime * Math.PI);
-
-    let targetRotation = this.opened ? -Math.PI / 2 : Math.PI / 2;
+    let targetRotation = this.opened ? this.openY : PAGE_CLOSED_Y;
     if (!this.bookClosed) {
       targetRotation += degToRad(this.number * 0.8);
     }
@@ -195,48 +212,14 @@ class PageSheet {
     const bones = this.mesh.skeleton.bones;
     for (let i = 0; i < bones.length; i++) {
       const target = i === 0 ? this.group : bones[i];
-      const insideCurveIntensity = i < 8 ? Math.sin(i * 0.2 + 0.25) : 0;
-      const outsideCurveIntensity = i >= 8 ? Math.cos(i * 0.3 + 0.09) : 0;
-      const turningIntensity =
-        Math.sin(i * Math.PI * (1 / bones.length)) * turningTime;
-
-      let rotationAngle =
-        insideCurveStrength * insideCurveIntensity * targetRotation -
-        outsideCurveStrength * outsideCurveIntensity * targetRotation +
-        turningCurveStrength * turningIntensity * targetRotation;
-      let foldRotationAngle = degToRad(Math.sign(targetRotation) * 2);
-
-      if (this.bookClosed) {
-        if (i === 0) {
-          rotationAngle = targetRotation;
-          foldRotationAngle = 0;
-        } else {
-          rotationAngle = 0;
-          foldRotationAngle = 0;
-        }
-      }
-
-      dampAngle(target.rotation, "y", rotationAngle, easingFactor, delta);
-
-      const foldIntensity =
-        i > 8
-          ? Math.sin(i * Math.PI * (1 / bones.length) - 0.5) * turningTime
-          : 0;
-      dampAngle(
-        target.rotation,
-        "x",
-        foldRotationAngle * foldIntensity,
-        easingFactorFold,
-        delta
-      );
+      dampAngle(target.rotation, "y", i === 0 ? targetRotation : 0, easingFactor, delta);
+      dampAngle(target.rotation, "x", 0, easingFactor, delta);
     }
   }
 }
 
-export function createBook(cover = "cover") {
-  const pageList = pages.map((pageData, index) =>
-    index === 0 ? { ...pageData, front: cover } : pageData
-  );
+export function createBook(cover = "cover", content = CONFIG) {
+  const pageList = sheetsFromPages(content, cover);
   const edgeMaterials = createEdgeMaterials();
   const group = new Group();
   group.rotation.y = -Math.PI / 2;
@@ -249,7 +232,8 @@ export function createBook(cover = "cover") {
         pageData.front,
         pageData.back,
         pageList.length,
-        edgeMaterials
+        edgeMaterials,
+        content
       )
   );
   sheets.forEach((sheet) => group.add(sheet.group));

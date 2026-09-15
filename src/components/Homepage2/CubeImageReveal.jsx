@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 
 const CONFIG = {
   copy: {
-    title: "The Working Files",
+    title: "The Working Knowledge",
     line1: "The working paper for AI",
     line2: "builders",
   },

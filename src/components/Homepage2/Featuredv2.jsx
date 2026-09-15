@@ -95,7 +95,12 @@ export default function Featuredv2() {
           data-featured-book
           className="absolute inset-0 z-10 origin-center will-change-transform"
         >
-          <BookCanvas cursorHint />
+          <BookCanvas
+            cursorHint
+            restRotation={[0.1, -0.42, -0.05]}
+          
+            cameraDistance={4}
+          />
         </div>
       </div>
     </section>

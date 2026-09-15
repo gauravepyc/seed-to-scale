@@ -174,7 +174,7 @@ export default function AboutV2() {
               data-about-heading
               className="mt-[4vw] pr-[2vw] font-glare text-[2.35vw] font-light leading-[1.18] text-foreground max-md:mt-4 max-md:text-[28px]"
             >
-              Every model generation gets louder. The Working Files is where
+              Every model generation gets louder. The Working Knowledge is where
               that noise gets sorted into ground-level thinking: research and
               reasoning built from direct conversations with the engineers and
               founders running these systems, checked against what&apos;s

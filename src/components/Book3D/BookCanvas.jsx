@@ -22,6 +22,7 @@ import {
 } from "three";
 import useTiltInput from "@/components/Reusable/useTiltInput";
 import { createBook } from "./createBook";
+import { CONFIG } from "./config";
 
 const TILT_PITCH = 18;
 const TILT_YAW = 24;
@@ -41,6 +42,7 @@ export default function BookCanvas({
   restRotation = [0, 0, 0],
   cameraDistance = 3.7,
   cursorHint = false,
+  content = CONFIG,
 }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
@@ -103,7 +105,7 @@ export default function BookCanvas({
     rim.position.set(-1.4, 2.6, -3.6);
     scene.add(rim);
 
-    const book = createBook(cover);
+    const book = createBook(cover, content);
     book.meshes.forEach((mesh) => {
       mesh.castShadow = interactive;
     });
@@ -279,7 +281,7 @@ export default function BookCanvas({
       renderer.dispose();
       wrap.style.cursor = "default";
     };
-  }, [tilt, cover, interactive, restX, restY, restZ, cameraDistance, cursorHint]);
+  }, [tilt, cover, interactive, restX, restY, restZ, cameraDistance, cursorHint, content]);
 
   return (
     <div ref={wrapRef} className="relative h-full w-full touch-pan-y">

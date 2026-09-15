@@ -9,7 +9,7 @@ gsap.registerPlugin(useGSAP);
 
 const ITEMS = [
   {
-    question: "What is The Working Files?",
+    question: "What is The Working Knowledge?",
     answer:
       "A small, primary-research series for AI builders — three reports, written from direct conversations with frontier labs and the AI-native teams building fastest, not summarized from press releases.",
   },

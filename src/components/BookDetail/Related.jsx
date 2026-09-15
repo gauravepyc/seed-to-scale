@@ -37,7 +37,7 @@ export default function Related() {
             Related
           </p>
           <SplitText as="h2" className="mt-[1.4vw] text-title leading-[1.05]">
-            More from <span className="text-primary">The Working Files.</span>
+            More from <span className="text-primary">The Working Knowledge.</span>
           </SplitText>
         </div>
       </div>

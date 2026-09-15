@@ -60,7 +60,7 @@ function CoverArt() {
 }
 
 export default function Book({
-  kicker = "The Working Files · 01",
+  kicker = "The Working Knowledge · 01",
   version = "V1.2",
   title = "Harness Engineering",
   author = "Tarun Raheja · Accel",

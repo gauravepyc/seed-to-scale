@@ -37,9 +37,10 @@ export default function Featuredv2() {
           immediateRender: true,
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: "-10% 55%",
-            end: "top 10%",
+            start: "-10% 75%",
+            end: "-40% -10%",
             scrub: true,
+            markers:false,
           },
         }
       );
@@ -97,9 +98,9 @@ export default function Featuredv2() {
         >
           <BookCanvas
             cursorHint
-            restRotation={[0.1, -0.42, -0.05]}
-          
+            restRotation={[0, -0.42, 0]}
             cameraDistance={4.2}
+            tiltStrength={0.45}
           />
         </div>
       </div>

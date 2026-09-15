@@ -43,6 +43,7 @@ export default function BookCanvas({
   cameraDistance = 3.7,
   cursorHint = false,
   content = CONFIG,
+  tiltStrength = 1,
 }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
@@ -230,9 +231,9 @@ export default function BookCanvas({
       const idle = Math.abs(tx) < 0.001 && Math.abs(ty) < 0.001;
       const follow = delta * (idle ? TILT_RETURN : TILT_FOLLOW);
 
-      const targetX = -ty * MathUtils.degToRad(TILT_PITCH);
-      const targetY = tx * MathUtils.degToRad(TILT_YAW);
-      const targetZ = -tx * MathUtils.degToRad(TILT_ROLL);
+      const targetX = -ty * MathUtils.degToRad(TILT_PITCH * tiltStrength);
+      const targetY = tx * MathUtils.degToRad(TILT_YAW * tiltStrength);
+      const targetZ = -tx * MathUtils.degToRad(TILT_ROLL * tiltStrength);
 
       tiltGroup.rotation.x += (targetX - tiltGroup.rotation.x) * follow;
       tiltGroup.rotation.y += (targetY - tiltGroup.rotation.y) * follow;
@@ -281,7 +282,7 @@ export default function BookCanvas({
       renderer.dispose();
       wrap.style.cursor = "default";
     };
-  }, [tilt, cover, interactive, restX, restY, restZ, cameraDistance, cursorHint, content]);
+  }, [tilt, cover, interactive, restX, restY, restZ, cameraDistance, cursorHint, content, tiltStrength]);
 
   return (
     <div ref={wrapRef} className="relative h-full w-full touch-pan-y">

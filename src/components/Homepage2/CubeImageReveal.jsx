@@ -13,9 +13,9 @@ const CONFIG = {
     sectionClass:
       "relative my-[5vw] border-l border-r h-[30vw] w-full overflow-hidden border-b border-t border-foreground/25 bg-background",
     titleClass:
-      "font-sans text-[6vw] font-medium leading-none tracking-tight text-foreground",
+      "font-sans text-[6vw] font-medium leading-none tracking-tight text-primary",
     bodyClass:
-      "mt-[1.2vw] w-full font-sans text-[1.5vw] leading-snug text-primary",
+      "mt-[1.2vw] w-full text-[1.5vw] leading-snug font-glare text-[#CA5F2B]",
   },
   grid: {
     cell: 40,
@@ -505,7 +505,7 @@ export default function CubeImageReveal() {
             style={{
               color: "transparent",
               WebkitTextFillColor: "transparent",
-              WebkitTextStroke: "0.012em #222222",
+              WebkitTextStroke: "0.012em #FF3621",
             }}
           >
             {CONFIG.copy.title}

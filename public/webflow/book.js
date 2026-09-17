@@ -13,6 +13,7 @@
   var Group = T.Group;
   var HemisphereLight = T.HemisphereLight;
   var LinearFilter = T.LinearFilter;
+  var LinearMipmapLinearFilter = T.LinearMipmapLinearFilter;
   var MathUtils = T.MathUtils;
   var Mesh = T.Mesh;
   var MeshPhysicalMaterial = T.MeshPhysicalMaterial;
@@ -121,17 +122,18 @@
     return n * TX;
   }
   function cssFont(name) {
-    if (typeof document === "undefined") return "sans-serif";
-    return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || "sans-serif";
+    if (typeof document === "undefined") return "";
+    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return value ? `${value}, ` : "";
   }
   function sans(weight, size) {
-    return `${weight} ${size}px ${cssFont("--font-fragment-sans")}, Arial, sans-serif`;
+    return `${weight} ${size}px ${cssFont("--font-fragment-sans")}Arial, sans-serif`;
   }
   function glare(weight, size) {
-    return `${weight} ${size}px ${cssFont("--font-fragment-glare")}, Georgia, serif`;
+    return `${weight} ${size}px ${cssFont("--font-fragment-glare")}Georgia, serif`;
   }
   function avenir(weight, size) {
-    return `${weight} ${size}px ${cssFont("--font-avenir")}, Arial, sans-serif`;
+    return `${weight} ${size}px ${cssFont("--font-avenir")}Arial, sans-serif`;
   }
   function textWidth(ctx, text) {
     return ctx.measureText(text).width;
@@ -669,6 +671,24 @@
     };
   }
   var canvasCache = /* @__PURE__ */ new Map();
+  var painted = /* @__PURE__ */ new Set();
+  var fontWatch = false;
+  function paint(canvas, side, content) {
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = PAGE;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    drawSide(ctx, canvas.width, canvas.height, side, content);
+  }
+  function watchFonts() {
+    if (fontWatch || typeof document === "undefined" || !document.fonts) return;
+    fontWatch = true;
+    document.fonts.ready.then(() => {
+      painted.forEach((entry) => {
+        paint(entry.canvas, entry.side, entry.content);
+        entry.texture.needsUpdate = true;
+      });
+    });
+  }
   function createPageTexture(side, content = CONFIG) {
     const key = JSON.stringify({
       side,
@@ -680,24 +700,21 @@
     });
     let canvas = canvasCache.get(key);
     if (!canvas) {
-      const w = px(1024);
-      const h = px(1370);
       canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      ctx.fillStyle = PAGE;
-      ctx.fillRect(0, 0, w, h);
-      drawSide(ctx, w, h, side, content);
+      canvas.width = px(1024);
+      canvas.height = px(1370);
+      paint(canvas, side, content);
       canvasCache.set(key, canvas);
     }
     const texture = new CanvasTexture(canvas);
     texture.colorSpace = SRGBColorSpace;
-    texture.minFilter = LinearFilter;
     texture.magFilter = LinearFilter;
-    texture.generateMipmaps = false;
+    texture.minFilter = LinearMipmapLinearFilter;
+    texture.generateMipmaps = true;
     texture.anisotropy = 16;
     texture.needsUpdate = true;
+    painted.add({ texture, canvas, side, content });
+    watchFonts();
     return texture;
   }
 
@@ -987,12 +1004,26 @@
     const [restX, restY, restZ] = parseRest(canvas.getAttribute("data-book-rest") || "0,-0.42,0");
     const cover = COVERS[variant] ?? "cover";
     const hint = wrap.querySelector("[data-book-hint]");
+    wrap.style.pointerEvents = "auto";
+    canvas.style.display = "block";
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    canvas.style.pointerEvents = "auto";
+    const embed = canvas.parentElement;
+    if (embed && embed !== wrap) {
+      embed.style.display = "block";
+      embed.style.width = "100%";
+      embed.style.height = "100%";
+      embed.style.pointerEvents = "auto";
+    }
     const renderer = new WebGLRenderer({
       canvas,
       antialias: true,
       alpha: true
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, interactive ? 3 : 2));
+    renderer.setPixelRatio(
+      Math.min(Math.max(window.devicePixelRatio || 1, 1.5), interactive ? 2.5 : 2)
+    );
     renderer.shadowMap.enabled = interactive;
     renderer.shadowMap.type = PCFSoftShadowMap;
     renderer.outputColorSpace = SRGBColorSpace;
@@ -1132,11 +1163,12 @@
       hintShow = false;
     };
     const resize = () => {
-      const { clientWidth, clientHeight } = wrap;
-      if (!clientWidth || !clientHeight) return;
-      camera.aspect = clientWidth / clientHeight;
+      const width = canvas.clientWidth || wrap.clientWidth;
+      const height = canvas.clientHeight || wrap.clientHeight;
+      if (!width || !height) return;
+      camera.aspect = width / height;
       camera.updateProjectionMatrix();
-      renderer.setSize(clientWidth, clientHeight, false);
+      renderer.setSize(width, height, false);
     };
     const tick = () => {
       if (!running) return;
@@ -1165,6 +1197,7 @@
     tick();
     const observer = new ResizeObserver(resize);
     observer.observe(wrap);
+    observer.observe(canvas);
     const vis = new IntersectionObserver(
       ([entry]) => {
         const visible = Boolean(entry?.isIntersecting);
@@ -1180,18 +1213,6 @@
       { rootMargin: "20% 0px", threshold: 0 }
     );
     vis.observe(wrap.parentElement ?? wrap);
-    wrap.style.pointerEvents = "auto";
-    canvas.style.display = "block";
-    canvas.style.width = "100%";
-    canvas.style.height = "100%";
-    canvas.style.pointerEvents = "auto";
-    const embed = canvas.parentElement;
-    if (embed && embed !== wrap) {
-      embed.style.display = "block";
-      embed.style.width = "100%";
-      embed.style.height = "100%";
-      embed.style.pointerEvents = "auto";
-    }
     wrap.closest("[data-featured-stage]")?.querySelectorAll("[data-featured-overlay], [data-featured-strips]").forEach((el) => {
       el.style.pointerEvents = "none";
     });

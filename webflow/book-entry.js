@@ -83,12 +83,28 @@ function mountBook(canvas) {
   const cover = COVERS[variant] ?? "cover";
   const hint = wrap.querySelector("[data-book-hint]");
 
+  wrap.style.pointerEvents = "auto";
+  canvas.style.display = "block";
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
+  canvas.style.pointerEvents = "auto";
+  const embed = canvas.parentElement;
+  if (embed && embed !== wrap) {
+    embed.style.display = "block";
+    embed.style.width = "100%";
+    embed.style.height = "100%";
+    embed.style.pointerEvents = "auto";
+  }
+
   const renderer = new WebGLRenderer({
     canvas,
     antialias: true,
     alpha: true,
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, interactive ? 3 : 2));
+  // Floor of 1.5 so the page text and hairlines still supersample on 1x screens.
+  renderer.setPixelRatio(
+    Math.min(Math.max(window.devicePixelRatio || 1, 1.5), interactive ? 2.5 : 2)
+  );
   renderer.shadowMap.enabled = interactive;
   renderer.shadowMap.type = PCFSoftShadowMap;
   renderer.outputColorSpace = SRGBColorSpace;
@@ -246,11 +262,12 @@ function mountBook(canvas) {
   };
 
   const resize = () => {
-    const { clientWidth, clientHeight } = wrap;
-    if (!clientWidth || !clientHeight) return;
-    camera.aspect = clientWidth / clientHeight;
+    const width = canvas.clientWidth || wrap.clientWidth;
+    const height = canvas.clientHeight || wrap.clientHeight;
+    if (!width || !height) return;
+    camera.aspect = width / height;
     camera.updateProjectionMatrix();
-    renderer.setSize(clientWidth, clientHeight, false);
+    renderer.setSize(width, height, false);
   };
 
   const tick = () => {
@@ -285,6 +302,7 @@ function mountBook(canvas) {
 
   const observer = new ResizeObserver(resize);
   observer.observe(wrap);
+  observer.observe(canvas);
   const vis = new IntersectionObserver(
     ([entry]) => {
       const visible = Boolean(entry?.isIntersecting);
@@ -301,18 +319,6 @@ function mountBook(canvas) {
   );
   vis.observe(wrap.parentElement ?? wrap);
 
-  wrap.style.pointerEvents = "auto";
-  canvas.style.display = "block";
-  canvas.style.width = "100%";
-  canvas.style.height = "100%";
-  canvas.style.pointerEvents = "auto";
-  const embed = canvas.parentElement;
-  if (embed && embed !== wrap) {
-    embed.style.display = "block";
-    embed.style.width = "100%";
-    embed.style.height = "100%";
-    embed.style.pointerEvents = "auto";
-  }
   wrap
     .closest("[data-featured-stage]")
     ?.querySelectorAll("[data-featured-overlay], [data-featured-strips]")

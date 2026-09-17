@@ -62,7 +62,9 @@ export default function BookCanvas({
       antialias: true,
       alpha: true,
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, interactive ? 3 : 2));
+    renderer.setPixelRatio(
+      Math.min(Math.max(window.devicePixelRatio || 1, 1.5), interactive ? 2.5 : 2)
+    );
     renderer.shadowMap.enabled = interactive;
     renderer.shadowMap.type = PCFSoftShadowMap;
     renderer.outputColorSpace = SRGBColorSpace;
@@ -209,11 +211,12 @@ export default function BookCanvas({
     };
 
     const resize = () => {
-      const { clientWidth, clientHeight } = wrap;
-      if (!clientWidth || !clientHeight) return;
-      camera.aspect = clientWidth / clientHeight;
+      const width = canvas.clientWidth || wrap.clientWidth;
+      const height = canvas.clientHeight || wrap.clientHeight;
+      if (!width || !height) return;
+      camera.aspect = width / height;
       camera.updateProjectionMatrix();
-      renderer.setSize(clientWidth, clientHeight, false);
+      renderer.setSize(width, height, false);
     };
 
     const tick = () => {

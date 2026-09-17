@@ -1,4 +1,9 @@
-import { CanvasTexture, LinearFilter, SRGBColorSpace } from "three";
+import {
+  CanvasTexture,
+  LinearFilter,
+  LinearMipmapLinearFilter,
+  SRGBColorSpace,
+} from "three";
 import { CONFIG } from "./config";
 
 const CREAM = "#F6F2EC";
@@ -13,23 +18,23 @@ function px(n) {
 }
 
 function cssFont(name) {
-  if (typeof document === "undefined") return "sans-serif";
-  return (
-    getComputedStyle(document.documentElement).getPropertyValue(name).trim() ||
-    "sans-serif"
-  );
+  if (typeof document === "undefined") return "";
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+  return value ? `${value}, ` : "";
 }
 
 function sans(weight, size) {
-  return `${weight} ${size}px ${cssFont("--font-fragment-sans")}, Arial, sans-serif`;
+  return `${weight} ${size}px ${cssFont("--font-fragment-sans")}Arial, sans-serif`;
 }
 
 function glare(weight, size) {
-  return `${weight} ${size}px ${cssFont("--font-fragment-glare")}, Georgia, serif`;
+  return `${weight} ${size}px ${cssFont("--font-fragment-glare")}Georgia, serif`;
 }
 
 function avenir(weight, size) {
-  return `${weight} ${size}px ${cssFont("--font-avenir")}, Arial, sans-serif`;
+  return `${weight} ${size}px ${cssFont("--font-avenir")}Arial, sans-serif`;
 }
 
 function textWidth(ctx, text) {
@@ -647,6 +652,28 @@ function makeDrawings(content) {
 }
 
 const canvasCache = new Map();
+const painted = new Set();
+let fontWatch = false;
+
+function paint(canvas, side, content) {
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = PAGE;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  drawSide(ctx, canvas.width, canvas.height, side, content);
+}
+
+// Webflow loads its faces after the book mounts, so the first paint bakes in
+// fallback type. Repaint once the real faces are ready.
+function watchFonts() {
+  if (fontWatch || typeof document === "undefined" || !document.fonts) return;
+  fontWatch = true;
+  document.fonts.ready.then(() => {
+    painted.forEach((entry) => {
+      paint(entry.canvas, entry.side, entry.content);
+      entry.texture.needsUpdate = true;
+    });
+  });
+}
 
 export function createPageTexture(side, content = CONFIG) {
   const key = JSON.stringify({
@@ -659,24 +686,22 @@ export function createPageTexture(side, content = CONFIG) {
   });
   let canvas = canvasCache.get(key);
   if (!canvas) {
-    const w = px(1024);
-    const h = px(1370);
     canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    ctx.fillStyle = PAGE;
-    ctx.fillRect(0, 0, w, h);
-    drawSide(ctx, w, h, side, content);
+    canvas.width = px(1024);
+    canvas.height = px(1370);
+    paint(canvas, side, content);
     canvasCache.set(key, canvas);
   }
 
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
-  texture.minFilter = LinearFilter;
   texture.magFilter = LinearFilter;
-  texture.generateMipmaps = false;
+  texture.minFilter = LinearMipmapLinearFilter;
+  texture.generateMipmaps = true;
   texture.anisotropy = 16;
   texture.needsUpdate = true;
+
+  painted.add({ texture, canvas, side, content });
+  watchFonts();
   return texture;
 }

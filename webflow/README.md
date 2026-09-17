@@ -34,6 +34,13 @@ Same pattern for `offset.js`, `button.js`, `cube-image-reveal.js`, `stats.js`.
 
 Three.js must load **before** `book.js`.
 
+`book.js` is a bundle of `book-entry.js` + `src/components/Book3D/*`. After editing either, rebuild it:
+
+```
+npx esbuild webflow/book-entry.js --bundle --format=iife --alias:three=./webflow/three-shim.js --outfile=webflow/book.js
+cp webflow/book.js public/webflow/book.js
+```
+
 Lenis off: `ENABLE_LENIS = false` in `global.js`.
 
 ## Title outline — `offset.js`

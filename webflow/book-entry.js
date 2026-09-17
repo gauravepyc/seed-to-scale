@@ -108,10 +108,18 @@ function mountBook(canvas) {
   key.position.set(2.6, 3.8, 3.4);
   key.castShadow = interactive;
   key.shadow.mapSize.set(1024, 1024);
-  key.shadow.radius = 12;
-  if ("intensity" in key.shadow) key.shadow.intensity = 0.12;
+  key.shadow.radius = 8;
   key.shadow.bias = -0.0015;
   key.shadow.normalBias = 0.035;
+  key.shadow.camera.near = 1;
+  key.shadow.camera.far = 14;
+  key.shadow.camera.left = -3.2;
+  key.shadow.camera.right = 3.2;
+  key.shadow.camera.top = 3.2;
+  key.shadow.camera.bottom = -3.2;
+  const shadowIntensity = 0.12;
+  const hasShadowIntensity = typeof key.shadow.intensity === "number";
+  if (hasShadowIntensity) key.shadow.intensity = shadowIntensity;
   scene.add(key);
 
   const fill = new DirectionalLight(0xfff4e8, 0.78);
@@ -142,7 +150,10 @@ function mountBook(canvas) {
 
   const ground = new Mesh(
     new PlaneGeometry(8, 8),
-    new ShadowMaterial({ opacity: 0.1, transparent: true })
+    new ShadowMaterial({
+      opacity: hasShadowIntensity ? 0.1 : 0.1 * shadowIntensity,
+      transparent: true,
+    })
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.92;
@@ -192,6 +203,7 @@ function mountBook(canvas) {
     setPointer(event);
     const index = pickPage();
     wrap.style.cursor = index !== null ? "pointer" : "default";
+    canvas.style.cursor = index !== null ? "pointer" : "default";
     book.highlight(index);
     hintShow = Boolean(hint) && index !== null && !book.sheets[0].opened;
     if (hintShow) {
@@ -223,6 +235,7 @@ function mountBook(canvas) {
     tilt.x = 0;
     tilt.y = 0;
     wrap.style.cursor = "default";
+    canvas.style.cursor = "default";
     book.highlight(null);
     hintShow = false;
   };
@@ -283,8 +296,27 @@ function mountBook(canvas) {
   );
   vis.observe(wrap.parentElement ?? wrap);
 
-  canvas.addEventListener("pointermove", onMove);
-  canvas.addEventListener("pointerleave", onLeave);
+  wrap.style.pointerEvents = "auto";
+  canvas.style.display = "block";
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
+  canvas.style.pointerEvents = "auto";
+  const embed = canvas.parentElement;
+  if (embed && embed !== wrap) {
+    embed.style.display = "block";
+    embed.style.width = "100%";
+    embed.style.height = "100%";
+    embed.style.pointerEvents = "auto";
+  }
+  wrap
+    .closest("[data-featured-stage]")
+    ?.querySelectorAll("[data-featured-overlay], [data-featured-strips]")
+    .forEach((el) => {
+      el.style.pointerEvents = "none";
+    });
+
+  wrap.addEventListener("pointermove", onMove, { passive: true });
+  wrap.addEventListener("pointerleave", onLeave);
   canvas.addEventListener("click", onClick);
 
   const api = {
@@ -304,8 +336,8 @@ function mountBook(canvas) {
       cancelAnimationFrame(frame);
       observer.disconnect();
       vis.disconnect();
-      canvas.removeEventListener("pointermove", onMove);
-      canvas.removeEventListener("pointerleave", onLeave);
+      wrap.removeEventListener("pointermove", onMove);
+      wrap.removeEventListener("pointerleave", onLeave);
       canvas.removeEventListener("click", onClick);
       book.dispose();
       ground.geometry.dispose();

@@ -1,0 +1,43 @@
+<!--
+  Build layout, type, colors, and images in Webflow.
+  Scripts only need the data attributes.
+
+  Left column: your copy / CMS fields.
+  Right column: background image or color in Designer, then the book canvas.
+-->
+
+<section data-featured-scope data-book-scroll="1">
+  <div>
+    <p>Featured · Latest issue</p>
+    <h2>How to Build a Vertical AI Product</h2>
+    <p>
+      If you are building AI for law, medicine, or any field where the work
+      needs to be right, the frontier model you use is only half the story.
+    </p>
+    <p>Tarun Raheja · Accel · 21 Sep 2026</p>
+    <a href="#" data-button>
+      <div data-button-fill></div>
+      <div>
+        <div data-button-label>Read Now</div>
+        <div data-button-label-hover>Read Now</div>
+      </div>
+      <div>
+        <div data-button-icon>→</div>
+        <div data-button-icon-hover>→</div>
+      </div>
+    </a>
+  </div>
+
+  <div data-featured-stage>
+    <!-- Set this block's background image / color in Webflow -->
+    <div data-featured-book>
+      <canvas
+        data-book
+        data-book-variant="harness"
+        data-book-distance="4.2"
+        data-book-rest="0,-0.42,0"
+      ></canvas>
+      <span data-book-hint>Click to open</span>
+    </div>
+  </div>
+</section>

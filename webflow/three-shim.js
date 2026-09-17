@@ -1,0 +1,32 @@
+const T = window.THREE;
+
+export const ACESFilmicToneMapping = T.ACESFilmicToneMapping;
+export const AmbientLight = T.AmbientLight;
+export const Bone = T.Bone;
+export const BoxGeometry = T.BoxGeometry;
+export const CanvasTexture = T.CanvasTexture;
+export const Clock = T.Clock;
+export const Color = T.Color;
+export const DirectionalLight = T.DirectionalLight;
+export const Float32BufferAttribute = T.Float32BufferAttribute;
+export const Group = T.Group;
+export const HemisphereLight = T.HemisphereLight;
+export const MathUtils = T.MathUtils;
+export const Mesh = T.Mesh;
+export const MeshPhysicalMaterial = T.MeshPhysicalMaterial;
+export const MeshStandardMaterial = T.MeshStandardMaterial;
+export const PCFSoftShadowMap = T.PCFSoftShadowMap;
+export const PerspectiveCamera = T.PerspectiveCamera;
+export const PlaneGeometry = T.PlaneGeometry;
+export const Raycaster = T.Raycaster;
+export const SRGBColorSpace = T.SRGBColorSpace;
+export const Scene = T.Scene;
+export const ShadowMaterial = T.ShadowMaterial;
+export const Skeleton = T.Skeleton;
+export const SkinnedMesh = T.SkinnedMesh;
+export const Uint16BufferAttribute = T.Uint16BufferAttribute;
+export const Vector2 = T.Vector2;
+export const Vector3 = T.Vector3;
+export const WebGLRenderer = T.WebGLRenderer;
+
+export default T;

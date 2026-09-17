@@ -13,9 +13,24 @@ You build the UI. Scripts only need these attributes.
 <script src="BUTTON_JS_URL"></script>
 <script src="CUBE_JS_URL"></script>
 <script src="STATS_JS_URL"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js"></script>
+<script src="BOOK_JS_URL"></script>
+<script src="FEATURED_JS_URL"></script>
 ```
 
-Upload `global.js`, `offset.js`, `button.js`, `cube-image-reveal.js`, `stats.js` to Assets. Paste those URLs.
+Upload to **Assets will fail** — Webflow does not accept `.js` files there.
+
+Host the scripts and paste the URLs in Footer custom code. Easiest: GitHub + jsDelivr (repo must be **public**).
+
+```
+https://cdn.jsdelivr.net/gh/gauravepyc/seed-to-scale@main/webflow/global.js
+https://cdn.jsdelivr.net/gh/gauravepyc/seed-to-scale@main/webflow/book.js
+https://cdn.jsdelivr.net/gh/gauravepyc/seed-to-scale@main/webflow/featured.js
+```
+
+Same pattern for `offset.js`, `button.js`, `cube-image-reveal.js`, `stats.js`.
+
+Three.js must load **before** `book.js`.
 
 Lenis off: `ENABLE_LENIS = false` in `global.js`.
 
@@ -74,3 +89,47 @@ Structure reminder: `snippets/cube-image-reveal.html`.
 Spins once (`top 78%`). Reuse the same attributes on any later stats block.
 
 Structure reminder: `snippets/stats.html`.
+
+## Featured book — `book.js` + `featured.js`
+
+Copy, images, button, and the right-column background are Designer / CMS. The 3D book is the canvas.
+
+| Element | Attribute | What it is |
+|---|---|---|
+| Section | `data-featured-scope` | Scroll trigger for the fly-in |
+| Section (optional) | `data-book-scroll="1"` | Opens the book to page `1` while in view, closes when you leave. Use `"open"` for the first spread. |
+| Stage | `data-featured-stage` | Right column. Set height, overflow hidden, background image/color, `perspective: 1400px` |
+| Book wrap | `data-featured-book` | GSAP flies this in. Position absolute, fill the stage |
+| Canvas | `data-book` | The 3D book |
+| Canvas (optional) | `data-book-variant="harness"` | `harness`, `frontier`, or `teams` |
+| Canvas (optional) | `data-book-distance="4.2"` | Camera distance |
+| Canvas (optional) | `data-book-rest="0,-0.42,0"` | Rest rotation |
+| Hint (optional) | `data-book-hint` | “Click to open” label inside the wrap |
+
+**In Webflow**
+
+1. Two-column section. Left: kicker, title, body, author, button — all Webflow text / CMS.
+2. Right (`data-featured-stage`): relative, overflow hidden, min-height ~42vw, background image if you want strips.
+3. Inside the stage, a full-size wrap (`data-featured-book`) with `position: absolute; inset: 0`.
+4. Embed a canvas inside that wrap. Attributes: `data-book`, `data-book-variant="harness"`.
+5. Canvas CSS: `width: 100%; height: 100%; display: block`.
+6. Put `data-featured-scope` on the section. Add `data-book-scroll="1"` if the book should open on scroll.
+
+Click still turns pages. Scroll uses the same open / close as click.
+
+**Target the book yourself**
+
+```js
+const canvas = document.querySelector("[data-book]");
+const book = window.site.books.get(canvas);
+book.open();     // first spread
+book.open(2);    // a later page
+book.close();    // cover
+book.setPage(n);
+```
+
+Or tween `[data-featured-book]` with GSAP — that wrapper is what the fly-in already animates.
+
+Fonts: set `--font-fragment-glare`, `--font-fragment-sans`, `--font-avenir` on `:root` if those faces are loaded. Otherwise it falls back to Georgia / Arial.
+
+Structure reminder: `snippets/featured.html`.

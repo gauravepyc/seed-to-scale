@@ -75,6 +75,15 @@
     canvas.style.height = "100%";
     canvas.style.pointerEvents = "none";
     canvas.style.zIndex = "0";
+
+    const parent = canvas.parentElement;
+    if (
+      parent &&
+      !parent.hasAttribute("data-featured-book") &&
+      !parent.hasAttribute("data-featured-stage")
+    ) {
+      parent.style.pointerEvents = "none";
+    }
   }
 
   function mount(canvas) {

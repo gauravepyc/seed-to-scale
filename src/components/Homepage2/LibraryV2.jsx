@@ -22,17 +22,13 @@ const FILES = [
     },
     {
         variant: "frontier",
-        title: "Frontier Model Capabilities",
-        body: "What models absorb, what they don't, and where to invest.",
-        meta: ["Draft", "3 of 7 chapters", "Last edited 28 Aug 2026"],
+        status: "COMING SOON!",
         restRotation: [0.05, 0.05, 0.02],
         ready: false,
     },
     {
         variant: "teams",
-        title: "AI-Maximal Teams in Practice",
-        body: "Case studies and patterns from the world’s most effective AI-powered teams.",
-        meta: ["Draft", "1 of 7 chapters", "Last edited 2 Sep 2026"],
+        status: "COMING SOON!",
         restRotation: [0.03, 0.2, 0.07],
         ready: false,
     },
@@ -131,40 +127,47 @@ export default function Libraryv2() {
                                     {file.ready ? (
                                         <Button title="Read the book!" className="cursor-pointer" />
                                     ) : (
-                                        <span className="font-glare text-[1.5vw] leading-none text-primary max-md:text-[22px]">
-                                            In progress
+                                        <span className="font-glare text-[1.5vw] leading-none text-foreground/40 max-md:text-[22px]">
+                                            {file.status}
                                         </span>
                                     )}
                                 </div>
                             </div>
 
-                            <div
-                                className={`px-[2vw] pb-[3vw] pt-[1.6vw] max-md:px-5 max-md:pb-8 max-md:pt-5 ${file.ready ? "" : "opacity-45 grayscale"
-                                    }`}
-                            >
-                                <SplitText
-                                    as="h3"
-                                    className={`max-w-[18vw] font-glare text-[1.75vw] leading-[1.12] text-primary max-md:max-w-none max-md:text-[28px] ${file.ready ? "transition-opacity duration-300 group-hover:opacity-70" : ""
-                                        }`}
-                                >
-                                    {file.title}
-                                </SplitText>
-                                <SplitText
-                                    as="p"
-                                    className="mt-[0.9vw] max-w-[22vw] text-[1.05vw] leading-[1.45] text-foreground max-md:mt-3 max-md:max-w-none max-md:text-base"
-                                >
-                                    {file.body}
-                                </SplitText>
-                                <div className="mt-[1.15vw] flex flex-wrap gap-[0.4vw] max-md:mt-4">
-                                    {file.meta.map((item) => (
-                                        <span
-                                            key={item}
-                                            className="rounded-full border border-foreground/25 px-[0.75vw] py-[0.28vw] text-[0.65vw] uppercase tracking-[0.08em] text-foreground max-md:px-2.5 max-md:py-1 max-md:text-[10px]"
+                            <div className="px-[2vw] pb-[3vw] pt-[1.6vw] max-md:px-5 max-md:pb-8 max-md:pt-5">
+                                {file.ready ? (
+                                    <>
+                                        <SplitText
+                                            as="h3"
+                                            className="max-w-[18vw] font-glare text-[1.75vw] leading-[1.12] text-primary transition-opacity duration-300 group-hover:opacity-70 max-md:max-w-none max-md:text-[28px]"
                                         >
-                                            {item}
-                                        </span>
-                                    ))}
-                                </div>
+                                            {file.title}
+                                        </SplitText>
+                                        <SplitText
+                                            as="p"
+                                            className="mt-[0.9vw] max-w-[22vw] text-[1.05vw] leading-[1.45] text-foreground max-md:mt-3 max-md:max-w-none max-md:text-base"
+                                        >
+                                            {file.body}
+                                        </SplitText>
+                                        <div className="mt-[1.15vw] flex flex-wrap gap-[0.4vw] max-md:mt-4">
+                                            {file.meta.map((item) => (
+                                                <span
+                                                    key={item}
+                                                    className="rounded-full border border-foreground/25 px-[0.75vw] py-[0.28vw] text-[0.65vw] uppercase tracking-[0.08em] text-foreground max-md:px-2.5 max-md:py-1 max-md:text-[10px]"
+                                                >
+                                                    {item}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <SplitText
+                                        as="h3"
+                                        className="max-w-[18vw] font-glare text-[1.75vw] leading-[1.12] text-foreground/40 max-md:max-w-none max-md:text-[28px]"
+                                    >
+                                        {file.status}
+                                    </SplitText>
+                                )}
                             </div>
                         </Comp>
                     );

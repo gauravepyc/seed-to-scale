@@ -94,9 +94,12 @@ function degToRad(deg) {
 function pageSide(page, index) {
   return {
     kind: "page",
+    layout: page.layout ?? "article",
     kicker: page.kicker ?? "",
     heading: page.heading ?? "",
     body: page.body ?? "",
+    items: page.items ?? [],
+    sections: page.sections ?? [],
     black: Boolean(page.black),
     slot: index + 1,
   };

@@ -1,0 +1,19 @@
+/* Optional. You style the UI in Webflow.
+   Scripts also apply the critical animation styles.
+   Paste this only if you want hidden scrollbars + brand vars. */
+
+:root {
+  --background: #fbf8f3;
+  --foreground: #222222;
+  --primary: #ff3621;
+}
+
+html,
+body {
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}

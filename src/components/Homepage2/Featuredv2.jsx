@@ -62,22 +62,18 @@ export default function Featuredv2() {
           as="h2"
           className="mt-[2vw] max-w-[34vw] text-title leading-[1.05] text-background max-md:mt-4 max-md:max-w-none"
         >
-          Harness Engineering Playbook.
+          How to Build a Vertical AI Product
         </SplitText>
 
         <SplitText
           as="p"
           className="mt-[2.2vw] max-w-[32vw] text-content text-background/90 max-md:mt-6 max-md:max-w-none"
         >
-          A frontier model is rented. It gets smarter on its own, with every
-          release. The harness around it- the prompting, the tools, the checks-
-          is what you actually build, and it&apos;s where the margin lives. This
-          is how to build one, and know what to tear down every time the model
-          improves.
+         If you are building AI for law, medicine, or any field where the work needs to be right, the frontier model you use is only half the story. The rest is the harness - the context management, tooling, memory, orchestration - and this is what you actually build. This playbook shows you how to get started!
         </SplitText>
 
         <p className="mt-[2.4vw] text-meta uppercase text-background max-md:mt-8">
-          Tarun Raheja · Accel
+        Tarun Raheja · Accel · 21 Sep 2026
         </p>
 
         <Button

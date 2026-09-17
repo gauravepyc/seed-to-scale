@@ -74,12 +74,17 @@ function drawFilledBadge(ctx, w, label) {
 }
 
 function drawOutlineBadge(ctx, w, label) {
+  ctx.font = avenir(500, 18);
+  const textW = ctx.measureText(label).width;
+  const padX = 14;
+  const boxW = Math.max(118, textW + padX * 2);
+  const boxH = 40;
+  const x = w - 68 - boxW;
   ctx.strokeStyle = INK;
   ctx.lineWidth = 3;
-  ctx.strokeRect(w - 186, 70, 118, 40);
+  ctx.strokeRect(x, 70, boxW, boxH);
   ctx.fillStyle = INK;
-  ctx.font = avenir(500, 18);
-  ctx.fillText(label, w - 162, 97);
+  ctx.fillText(label, x + padX, 97);
 }
 
 function roundedRect(ctx, x, y, w, h, r) {
@@ -107,14 +112,14 @@ function fillSpacedText(ctx, text, x, y, spacing) {
   });
 }
 
-function drawStamp(ctx, x, y, rotation) {
+function drawStamp(ctx, x, y, rotation, label = "IN PROGRESS") {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(rotation);
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  const w = 420;
+  const w = Math.max(420, 48 + [...label].length * 28);
   const h = 112;
   const color = "#FF3621";
 
@@ -131,7 +136,7 @@ function drawStamp(ctx, x, y, rotation) {
 
   ctx.fillStyle = color;
   ctx.font = avenir(500, 34);
-  fillSpacedText(ctx, "IN PROGRESS", 0, 2, 6);
+  fillSpacedText(ctx, label, 0, 2, 6);
 
   ctx.globalAlpha = 0.18;
   for (let i = 0; i < 28; i++) {
@@ -195,21 +200,56 @@ function drawTeamsArt(ctx, w) {
   }
 }
 
-function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-  const words = text.split(" ");
+function layoutLines(ctx, text, maxWidth) {
+  const words = String(text || "")
+    .split(/\s+/)
+    .filter(Boolean);
+  const lines = [];
   let line = "";
-  let cursorY = y;
+
+  const pushChunked = (word) => {
+    let chunk = "";
+    for (const ch of word) {
+      const next = chunk + ch;
+      if (chunk && ctx.measureText(next).width > maxWidth) {
+        lines.push(chunk);
+        chunk = ch;
+      } else {
+        chunk = next;
+      }
+    }
+    line = chunk;
+  };
+
   for (const word of words) {
     const test = line ? `${line} ${word}` : word;
-    if (ctx.measureText(test).width > maxWidth) {
-      ctx.fillText(line, x, cursorY);
-      line = word;
-      cursorY += lineHeight;
-    } else {
+    if (ctx.measureText(test).width <= maxWidth) {
       line = test;
+      continue;
     }
+    if (line) lines.push(line);
+    if (ctx.measureText(word).width <= maxWidth) line = word;
+    else pushChunked(word);
   }
-  if (line) ctx.fillText(line, x, cursorY);
+  if (line) lines.push(line);
+  return lines;
+}
+
+function drawLines(ctx, lines, x, y, lineHeight) {
+  lines.forEach((line, i) => ctx.fillText(line, x, y + i * lineHeight));
+  return y + Math.max(lines.length - 1, 0) * lineHeight;
+}
+
+function fitFontSize(ctx, text, maxWidth, maxHeight, fontFn, minSize, maxSize, lineRatio) {
+  let size = maxSize;
+  let lines = [];
+  while (size >= minSize) {
+    ctx.font = fontFn(size);
+    lines = layoutLines(ctx, text, maxWidth);
+    if (lines.length * size * lineRatio <= maxHeight) break;
+    size -= 1;
+  }
+  return { size, lines, lineHeight: size * lineRatio };
 }
 
 function drawCover(ctx, w, h, content = CONFIG) {
@@ -288,7 +328,7 @@ function drawFrontierCover(ctx, w, h, content = CONFIG) {
   drawOutlineBadge(ctx, w, variant.badge);
   drawFrontierArt(ctx, w);
   drawCoverTitles(ctx, w, h, variant.title, content.author);
-  drawStamp(ctx, w * 0.7, h - 310, -0.32);
+  drawStamp(ctx, w * 0.7, h - 310, -0.32, variant.stamp ?? "IN PROGRESS");
 }
 
 function drawTeamsCover(ctx, w, h, content = CONFIG) {
@@ -304,38 +344,242 @@ function drawTeamsCover(ctx, w, h, content = CONFIG) {
   });
   ctx.font = avenir(500, 22);
   ctx.fillText(content.author, 64, h - 84);
-  drawStamp(ctx, w * 0.7, h - 310, -0.28);
+  drawStamp(ctx, w * 0.7, h - 310, -0.28, variant.stamp ?? "UPCOMING");
+}
+
+function drawHairline(ctx, x, y, width, color) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + width, y);
+  ctx.stroke();
+}
+
+function drawIntroPage(ctx, page, x, y, maxW, bottom, ink) {
+  const text = page.body || page.heading || "";
+  const cx = x + maxW / 2;
+  const measure = maxW * 0.92;
+
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.fillStyle = ink;
+
+  if (page?.kicker) {
+    ctx.font = avenir(500, 22);
+    fillSpacedText(ctx, page.kicker, cx, y, 8);
+  }
+
+  const fitted = fitFontSize(
+    ctx,
+    text,
+    measure,
+    bottom - y - 160,
+    (size) => glare(400, size),
+    44,
+    68,
+    1.28
+  );
+  const blockHeight =
+    fitted.size * 0.92 + Math.max(fitted.lines.length - 1, 0) * fitted.lineHeight;
+  const contentTop = y + (page?.kicker ? 88 : 12);
+  const contentBottom = bottom - 110;
+  const start =
+    contentTop + Math.max(0, (contentBottom - contentTop - blockHeight) * 0.38);
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = ink;
+  ctx.font = glare(400, fitted.size);
+  const lastY = drawLines(
+    ctx,
+    fitted.lines,
+    cx,
+    start + fitted.size * 0.92,
+    fitted.lineHeight
+  );
+
+  const ruleY = lastY + 52;
+  ctx.strokeStyle = ink;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx - 36, ruleY);
+  ctx.lineTo(cx + 36, ruleY);
+  ctx.stroke();
+
+  ctx.fillStyle = ink;
+  ctx.font = avenir(500, 20);
+  ctx.fillText(CONFIG.author, cx, ruleY + 44);
+
+  if (page?.slot) {
+    ctx.font = avenir(500, 20);
+    ctx.fillText(String(page.slot).padStart(2, "0"), cx, bottom + 32);
+  }
+
+  ctx.restore();
+}
+
+function drawIndexPage(ctx, page, x, y, maxW, bottom, ink) {
+  const items = page.items ?? [];
+  if (!items.length) return;
+  const slot = (bottom - y) / items.length;
+
+  items.forEach((item, i) => {
+    const y0 = y + i * slot;
+    if (i > 0) drawHairline(ctx, x, y0, maxW, ink);
+
+    ctx.fillStyle = ink;
+    ctx.font = avenir(500, 28);
+    ctx.fillText(String(i + 1).padStart(2, "0"), x, y0 + 48);
+
+    const fitted = fitFontSize(
+      ctx,
+      item,
+      maxW,
+      slot - 84,
+      (size) => glare(400, size),
+      36,
+      50,
+      1.16
+    );
+    ctx.fillStyle = ink;
+    ctx.font = glare(400, fitted.size);
+    drawLines(ctx, fitted.lines, x, y0 + 48 + fitted.size + 18, fitted.lineHeight);
+  });
+}
+
+function drawSectionsPage(ctx, page, x, y, maxW, bottom, ink) {
+  const sections = page.sections ?? [];
+  if (!sections.length) return;
+  const slot = (bottom - y) / sections.length;
+
+  sections.forEach((section, i) => {
+    const y0 = y + i * slot;
+    const y1 = y0 + slot - 16;
+    if (i > 0) drawHairline(ctx, x, y0, maxW, ink);
+
+    let cursor = y0 + 44;
+    if (section.number) {
+      ctx.fillStyle = ink;
+      ctx.font = avenir(500, 26);
+      ctx.fillText(section.number, x, cursor);
+      cursor += 28;
+    }
+
+    const heading = fitFontSize(
+      ctx,
+      section.heading,
+      maxW,
+      Math.min(240, (y1 - cursor) * 0.4),
+      (size) => glare(400, size),
+      32,
+      46,
+      1.16
+    );
+    ctx.fillStyle = ink;
+    ctx.font = glare(400, heading.size);
+    const headingBottom = drawLines(
+      ctx,
+      heading.lines,
+      x,
+      cursor + heading.size,
+      heading.lineHeight
+    );
+
+    const bodyTop = headingBottom + 64;
+    const body = fitFontSize(
+      ctx,
+      section.body,
+      maxW,
+      Math.max(80, y1 - bodyTop),
+      (size) => sans(400, size),
+      24,
+      34,
+      1.42
+    );
+    ctx.fillStyle = ink;
+    ctx.font = sans(400, body.size);
+    drawLines(ctx, body.lines, x, bodyTop + body.size * 0.85, body.lineHeight);
+  });
+}
+
+function drawArticlePage(ctx, page, x, y, maxW, bottom, ink) {
+  let cursor = y;
+  if (page?.heading) {
+    const heading = fitFontSize(
+      ctx,
+      page.heading,
+      maxW,
+      280,
+      (size) => glare(400, size),
+      40,
+      64,
+      1.16
+    );
+    ctx.fillStyle = ink;
+    ctx.font = glare(400, heading.size);
+    cursor = drawLines(ctx, heading.lines, x, cursor + heading.size, heading.lineHeight);
+    cursor += 64;
+  }
+  if (page?.body) {
+    const body = fitFontSize(
+      ctx,
+      page.body,
+      maxW,
+      Math.max(80, bottom - cursor),
+      (size) => sans(400, size),
+      26,
+      36,
+      1.4
+    );
+    ctx.fillStyle = ink;
+    ctx.font = sans(400, body.size);
+    drawLines(ctx, body.lines, x, cursor + body.size * 0.85, body.lineHeight);
+  }
 }
 
 function drawPage(ctx, w, h, page) {
   const black = Boolean(page?.black);
   const bg = black ? INK : PAGE;
   const ink = black ? CREAM : INK;
-  const muted = black ? "rgba(246,242,236,0.5)" : "rgba(34,34,34,0.45)";
-  const border = black ? "rgba(246,242,236,0.22)" : "rgba(34,34,34,0.16)";
 
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, w, h);
-  ctx.strokeStyle = border;
+  ctx.strokeStyle = ink;
   ctx.lineWidth = 2;
   ctx.strokeRect(40, 40, w - 80, h - 80);
 
+  const padX = 88;
+  const top = 118;
+  const bottom = h - 96;
+  const maxW = w - padX * 2;
+  const layout = page?.layout || "article";
+
+  if (layout === "intro") {
+    drawIntroPage(ctx, page, padX, top, maxW, bottom, ink);
+    return;
+  }
+
   if (page?.kicker) {
-    ctx.fillStyle = muted;
-    ctx.font = avenir(500, 22);
-    ctx.fillText(page.kicker, 80, 120);
+    ctx.fillStyle = ink;
+    ctx.font = avenir(500, 26);
+    ctx.fillText(page.kicker, padX, top);
   }
 
-  if (page?.heading) {
-    ctx.fillStyle = ink;
-    ctx.font = glare(400, 54);
-    wrapText(ctx, page.heading, 80, 220, w - 160, 64);
+  const contentTop = page?.kicker ? top + 52 : top;
+  if (layout === "index") {
+    drawIndexPage(ctx, page, padX, contentTop, maxW, bottom, ink);
+  } else if (layout === "sections") {
+    drawSectionsPage(ctx, page, padX, contentTop, maxW, bottom, ink);
+  } else {
+    drawArticlePage(ctx, page, padX, contentTop, maxW, bottom, ink);
   }
 
-  if (page?.body) {
+  if (page?.slot) {
     ctx.fillStyle = ink;
-    ctx.font = sans(400, 28);
-    wrapText(ctx, page.body, 80, page.heading ? 420 : 220, w - 160, 42);
+    ctx.font = avenir(500, 20);
+    ctx.textAlign = "right";
+    ctx.fillText(String(page.slot).padStart(2, "0"), w - padX, h - 64);
+    ctx.textAlign = "left";
   }
 }
 
@@ -350,11 +594,14 @@ function drawBackCover(ctx, w, h, content = CONFIG) {
   ctx.strokeStyle = INK;
   ctx.lineWidth = 4;
   ctx.strokeRect(28, 28, w - 56, h - 56);
+
   ctx.fillStyle = INK;
-  ctx.font = glare(400, 36);
-  ctx.fillText(content.back.title, 80, h / 2 - 20);
+  ctx.textAlign = "center";
+  ctx.font = glare(400, 40);
+  ctx.fillText(content.back.title, w / 2, h / 2 - 12);
   ctx.font = avenir(500, 20);
-  ctx.fillText(content.back.credit, 80, h / 2 + 24);
+  ctx.fillText(content.back.credit, w / 2, h / 2 + 36);
+  ctx.textAlign = "left";
 }
 
 function drawSide(ctx, w, h, side, content) {

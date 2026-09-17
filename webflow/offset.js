@@ -6,6 +6,12 @@
  *   data-offset-title   — heading; movement is measured from its center
  *   data-offset-stroke  — outline copy of each line (same text as the live word)
  *
+ * Optional, on the scope:
+ *   data-offset-rest="-0.04"    — rest lift in em. 0 sits dead behind the fill.
+ *   data-offset-move="0.035"    — how far the cursor drags it, in em
+ *   data-offset-color="#FF3621" — outline color
+ *   data-offset-width="0.005em" — outline thickness
+ *
  * At rest the outline sits slightly above the fill.
  * Moving the cursor shifts it; leaving the section resets it.
  */
@@ -20,6 +26,7 @@
   const REST_Y_EM = -0.04;
   const MOVE_EM = 0.035;
   const STROKE_COLOR = "#FF3621";
+  const STROKE_WIDTH = "0.005em";
 
   function onReady(callback) {
     if (document.readyState === "loading") {
@@ -43,7 +50,26 @@
     };
   }
 
-  function styleOutline(stroke) {
+  function number(value, fallback) {
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+
+  function text(value, fallback) {
+    const trimmed = (value || "").trim();
+    return trimmed || fallback;
+  }
+
+  function readOptions(scope) {
+    return {
+      rest: number(scope.getAttribute("data-offset-rest"), REST_Y_EM),
+      move: number(scope.getAttribute("data-offset-move"), MOVE_EM),
+      color: text(scope.getAttribute("data-offset-color"), STROKE_COLOR),
+      width: text(scope.getAttribute("data-offset-width"), STROKE_WIDTH),
+    };
+  }
+
+  function styleOutline(stroke, options) {
     const line = stroke.parentElement;
     if (line) line.style.position = "relative";
 
@@ -52,7 +78,7 @@
     stroke.style.top = "0";
     stroke.style.color = "transparent";
     stroke.style.webkitTextFillColor = "transparent";
-    stroke.style.webkitTextStroke = `0.005em ${STROKE_COLOR}`;
+    stroke.style.webkitTextStroke = `${options.width} ${options.color}`;
     stroke.style.pointerEvents = "none";
     stroke.style.userSelect = "none";
     stroke.style.willChange = "transform";
@@ -67,11 +93,12 @@
     const strokes = title ? [...title.querySelectorAll(SELECTOR.stroke)] : [];
     if (!title || !strokes.length) return;
 
-    strokes.forEach(styleOutline);
+    const options = readOptions(scope);
+    strokes.forEach((stroke) => styleOutline(stroke, options));
 
     const fontSize = () => parseFloat(getComputedStyle(title).fontSize) || 16;
-    const restY = () => REST_Y_EM * fontSize();
-    const moveRange = () => MOVE_EM * fontSize();
+    const restY = () => options.rest * fontSize();
+    const moveRange = () => options.move * fontSize();
 
     gsap.set(strokes, { opacity: 0, x: 0, y: 0 });
 

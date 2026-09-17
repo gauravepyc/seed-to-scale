@@ -51,6 +51,12 @@ Lenis off: `ENABLE_LENIS = false` in `global.js`.
 | Hero section | `data-offset-scope` | Mouse is tracked here |
 | Heading | `data-offset-title` | Center of this box = rest position |
 | Outline copy of each word | `data-offset-stroke` | Same text as the live word, sits behind it |
+| Hero section (optional) | `data-offset-rest="-0.04"` | Rest lift in em. `0` sits dead behind the fill. |
+| Hero section (optional) | `data-offset-move="0.035"` | How far the cursor drags it, in em |
+| Hero section (optional) | `data-offset-color="#FF3621"` | Outline color |
+| Hero section (optional) | `data-offset-width="0.005em"` | Outline thickness |
+
+Defaults match the hero. For a title sitting over the cube mosaic, use `data-offset-rest="0"` and `data-offset-width="0.012em"`.
 
 ## Button — `button.js`
 

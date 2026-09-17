@@ -2,6 +2,8 @@
 
 You build the UI. Scripts only need these attributes.
 
+New to this? Start with [SETUP.md](SETUP.md) — step by step, with the structure for each section.
+
 ## Load (Footer)
 
 ```html

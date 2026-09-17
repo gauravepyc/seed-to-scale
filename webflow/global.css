@@ -67,3 +67,22 @@ body::-webkit-scrollbar {
   opacity: 0;
   white-space: nowrap;
 }
+
+/* Library row — the script and the book need these; sizes stay in Webflow. */
+[data-library-book] {
+  position: relative;
+  overflow: hidden;
+}
+
+[data-library-overlay] {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Cube mosaic — the canvas is placed by the script. */
+[data-cube-scope] {
+  position: relative;
+  overflow: hidden;
+}

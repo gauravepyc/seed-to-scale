@@ -55,6 +55,9 @@
     stroke.style.webkitTextStroke = `0.005em ${STROKE_COLOR}`;
     stroke.style.pointerEvents = "none";
     stroke.style.userSelect = "none";
+    stroke.style.willChange = "transform";
+    // The outline is a duplicate of the word; keep it out of the a11y tree.
+    stroke.setAttribute("aria-hidden", "true");
   }
 
   function initTitleOffset(scope) {

@@ -1,0 +1,81 @@
+<!--
+  Book copy, edited in Webflow.
+
+  Put this block anywhere inside the same section as the book canvas
+  (or inside [data-featured-book] itself). The script reads it, then hides it —
+  nothing shows on the page. Set it to Display: none in Designer as well, so the
+  copy never flashes. Every field is optional: leave one out and the
+  book keeps the value baked into the script.
+
+  Each element can be a plain text block or a CMS-bound field.
+  For a second book on the page, add data-book-for="frontier" (or "teams").
+-->
+
+<div data-book-content>
+  <!-- Cover -->
+  <div data-book-series>THE WORKING KNOWLEDGE</div>
+  <div data-book-cover-number>01</div>
+  <div data-book-cover-badge>V1.0</div>
+  <div data-book-author>TARUN RAHEJA · ACCEL · 21 SEPT 2026</div>
+  <!-- One line per child. Or one text block: "Harness | Engineering" -->
+  <div data-book-cover-title>
+    <div>Harness</div>
+    <div>Engineering</div>
+  </div>
+
+  <!-- Back cover -->
+  <div data-book-back-title>The Working Knowledge</div>
+  <div data-book-back-credit>TARUN RAHEJA · ACCEL · 21 SEPT 2026</div>
+
+  <!-- Page 1 — big centered line -->
+  <div data-book-page="intro">
+    <div data-book-kicker>THE FILE</div>
+    <div data-book-body>
+      This playbook discusses how to extend frontier model capabilities via
+      Harness Engineering, and how to durably retain your moat.
+    </div>
+  </div>
+
+  <!-- Page 2 — numbered list -->
+  <div data-book-page="index">
+    <div data-book-kicker>INDEX</div>
+    <div data-book-item>Benchmarking model capabilities in your domain</div>
+    <div data-book-item>Harness engineering to improve frontier performance</div>
+    <div data-book-item>Productionizing and scaling up</div>
+    <div data-book-item>Retaining moats and staying ahead</div>
+  </div>
+
+  <!-- Page 3 — two write-ups. Two per page reads best. -->
+  <div data-book-page="sections">
+    <div data-book-kicker>THE FILE</div>
+    <div data-book-section>
+      <div data-book-section-number>01</div>
+      <div data-book-section-heading>BENCHMARKING MODEL CAPABILITIES IN YOUR DOMAIN</div>
+      <div data-book-section-body>
+        Frontier models are superhuman at some tasks, and useless at others -
+        unpredictably. We show ways to understand where the model is weak /
+        strong in your domain in a principled manner.
+      </div>
+    </div>
+    <div data-book-section>
+      <div data-book-section-number>02</div>
+      <div data-book-section-heading>HARNESS ENGINEERING TO IMPROVE FRONTIER PERFORMANCE</div>
+      <div data-book-section-body>
+        Simple prompts cannot elicit peak capabilities from frontier models. We
+        show how to achieve it - with tools, context management, loops,
+        decomposition - and how to cleanly measure improvements.
+      </div>
+    </div>
+  </div>
+
+  <!-- Page 4 — heading + body -->
+  <div data-book-page="article">
+    <div data-book-kicker>THE FILE</div>
+    <div data-book-heading>Retaining moats and staying ahead</div>
+    <div data-book-body>
+      Every new model release makes parts of our harness unnecessary or
+      unwieldy, and throttles performance. We show what to delete when, and
+      what parts of it a competitor cannot copy.
+    </div>
+  </div>
+</div>

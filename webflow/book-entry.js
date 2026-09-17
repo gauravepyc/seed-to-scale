@@ -37,7 +37,8 @@ import {
   WebGLRenderer,
 } from "three";
 import { createBook } from "../src/components/Book3D/createBook.js";
-import { CONFIG } from "../src/components/Book3D/config.js";
+import { resolveBookContent } from "../src/components/Book3D/content.js";
+import { readBookContent } from "./book-content.js";
 
 const COVERS = {
   harness: "cover",
@@ -150,17 +151,34 @@ function mountBook(canvas) {
   rim.position.set(-1.4, 2.6, -3.6);
   scene.add(rim);
 
-  const pages = CONFIG.variants?.[variant]?.pages;
-  const content = pages ? { ...CONFIG, pages } : CONFIG;
-  const book = createBook(cover, content);
+  // Copy comes from the Webflow page when it declares any; config.js fills the rest.
+  let content = resolveBookContent(readBookContent(canvas, wrap, variant), variant);
+  let book = createBook(cover, content);
   const maxAniso = renderer.capabilities.getMaxAnisotropy();
-  book.meshes.forEach((mesh) => {
-    mesh.castShadow = interactive;
-    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-    mats.forEach((mat) => {
-      if (mat.map) mat.map.anisotropy = maxAniso;
+
+  const dressBook = () => {
+    book.meshes.forEach((mesh) => {
+      mesh.castShadow = interactive;
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      mats.forEach((mat) => {
+        if (mat.map) mat.map.anisotropy = maxAniso;
+      });
     });
-  });
+  };
+
+  const disposeBook = (target) => {
+    target.dispose();
+    target.meshes.forEach((mesh) => {
+      mesh.geometry.dispose();
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      mats.forEach((mat) => {
+        mat.map?.dispose();
+        mat.dispose();
+      });
+    });
+  };
+
+  dressBook();
 
   const tiltGroup = new Group();
   const pivot = new Group();
@@ -187,7 +205,6 @@ function mountBook(canvas) {
   const tilt = { x: 0, y: 0 };
   let frame = 0;
   let running = true;
-  const pageCount = book.sheets.length;
 
   const setPointer = (event) => {
     const rect = canvas.getBoundingClientRect();
@@ -332,9 +349,27 @@ function mountBook(canvas) {
 
   const api = {
     canvas,
-    pageCount,
+    get pageCount() {
+      return book.sheets.length;
+    },
+    get content() {
+      return content;
+    },
+    // Swap the copy at runtime: window.site.books.get(canvas).setContent({...})
+    setContent(next) {
+      content = resolveBookContent(next, variant);
+      const page = book.sheets.findIndex((sheet) => !sheet.opened);
+      const previous = book;
+      pivot.remove(previous.group);
+      book = createBook(cover, content);
+      pivot.add(book.group);
+      dressBook();
+      disposeBook(previous);
+      if (page > 0) book.setPage(Math.min(page, book.sheets.length));
+      return api;
+    },
     open(page = 1) {
-      book.setPage(Math.max(1, Math.min(pageCount, page)));
+      book.setPage(Math.max(1, Math.min(book.sheets.length, page)));
     },
     close() {
       book.setPage(0);
@@ -350,7 +385,7 @@ function mountBook(canvas) {
       wrap.removeEventListener("pointermove", onMove);
       wrap.removeEventListener("pointerleave", onLeave);
       canvas.removeEventListener("click", onClick);
-      book.dispose();
+      disposeBook(book);
       ground.geometry.dispose();
       ground.material.dispose();
       renderer.dispose();

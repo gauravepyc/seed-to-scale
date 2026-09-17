@@ -278,7 +278,7 @@ function fitFontSize(ctx, text, maxWidth, maxHeight, fontFn, minSize, maxSize, l
 }
 
 function drawCover(ctx, w, h, content = CONFIG) {
-  const { number, badge, title } = content.cover;
+  const { number, badge, title } = content.cover ?? CONFIG.cover;
   ctx.fillStyle = CREAM;
   ctx.fillRect(0, 0, w, h);
   ctx.strokeStyle = INK;
@@ -344,27 +344,31 @@ function drawCover(ctx, w, h, content = CONFIG) {
   }
 
   drawCoverTitles(ctx, w, h, title, content.author);
+
+  if (content.cover?.stamp) {
+    drawStamp(ctx, w * 0.7, h - px(310), -0.3, content.cover.stamp);
+  }
 }
 
 function drawFrontierCover(ctx, w, h, content = CONFIG) {
-  const variant = content.variants.frontier;
+  const variant = content.variants?.frontier ?? CONFIG.variants.frontier;
   drawCoverFrame(ctx, w, h);
   drawSeriesLabel(ctx, variant.number, content.series);
   drawOutlineBadge(ctx, w, variant.badge);
   drawFrontierArt(ctx, w);
-  drawCoverTitles(ctx, w, h, variant.title, content.author);
+  drawCoverTitles(ctx, w, h, variant.title ?? [], content.author);
   drawStamp(ctx, w * 0.7, h - px(310), -0.32, variant.stamp ?? "IN PROGRESS");
 }
 
 function drawTeamsCover(ctx, w, h, content = CONFIG) {
-  const variant = content.variants.teams;
+  const variant = content.variants?.teams ?? CONFIG.variants.teams;
   drawCoverFrame(ctx, w, h);
   drawSeriesLabel(ctx, variant.number, content.series);
   drawOutlineBadge(ctx, w, variant.badge);
   drawTeamsArt(ctx, w);
   ctx.fillStyle = INK;
   ctx.font = glare(400, px(64));
-  variant.title.forEach((line, i) => {
+  (variant.title ?? []).forEach((line, i) => {
     ctx.fillText(line, px(64), h - px(240) + i * px(80));
   });
   ctx.font = avenir(500, px(22));
@@ -381,7 +385,7 @@ function drawHairline(ctx, x, y, width, color) {
   ctx.stroke();
 }
 
-function drawIntroPage(ctx, page, x, y, maxW, bottom, ink) {
+function drawIntroPage(ctx, page, x, y, maxW, bottom, ink, content = CONFIG) {
   const text = page.body || page.heading || "";
   const cx = x + maxW / 2;
   const measure = maxW * 0.92;
@@ -433,7 +437,7 @@ function drawIntroPage(ctx, page, x, y, maxW, bottom, ink) {
 
   ctx.fillStyle = ink;
   ctx.font = avenir(500, px(20));
-  fillCentered(ctx, CONFIG.author, cx, ruleY + px(44));
+  fillCentered(ctx, content.author ?? CONFIG.author, cx, ruleY + px(44));
 
   if (page?.slot) {
     ctx.font = avenir(500, px(20));
@@ -562,7 +566,7 @@ function drawArticlePage(ctx, page, x, y, maxW, bottom, ink) {
   }
 }
 
-function drawPage(ctx, w, h, page) {
+function drawPage(ctx, w, h, page, content = CONFIG) {
   const black = Boolean(page?.black);
   const bg = black ? INK : PAGE;
   const ink = black ? CREAM : INK;
@@ -582,7 +586,7 @@ function drawPage(ctx, w, h, page) {
   const layout = page?.layout || "article";
 
   if (layout === "intro") {
-    drawIntroPage(ctx, page, padX, top, maxW, bottom, ink);
+    drawIntroPage(ctx, page, padX, top, maxW, bottom, ink, content);
     return;
   }
 
@@ -622,17 +626,18 @@ function drawBackCover(ctx, w, h, content = CONFIG) {
   ctx.lineWidth = px(4);
   ctx.strokeRect(px(28), px(28), w - px(56), h - px(56));
 
+  const back = content.back ?? CONFIG.back;
   ctx.fillStyle = INK;
   ctx.font = glare(400, px(40));
-  fillCentered(ctx, content.back.title, w / 2, h / 2 - px(12));
+  fillCentered(ctx, back.title ?? "", w / 2, h / 2 - px(12));
   ctx.font = avenir(500, px(20));
-  fillCentered(ctx, content.back.credit, w / 2, h / 2 + px(36));
+  fillCentered(ctx, back.credit ?? "", w / 2, h / 2 + px(36));
 }
 
 function drawSide(ctx, w, h, side, content) {
   if (!side) return;
   if (side.kind === "page") {
-    drawPage(ctx, w, h, side);
+    drawPage(ctx, w, h, side, content);
     return;
   }
   if (side.kind === "blank") {

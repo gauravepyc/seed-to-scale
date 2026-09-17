@@ -135,13 +135,13 @@
   function avenir(weight, size) {
     return `${weight} ${size}px ${cssFont("--font-avenir")}Arial, sans-serif`;
   }
-  function textWidth(ctx, text) {
-    return ctx.measureText(text).width;
+  function textWidth(ctx, text2) {
+    return ctx.measureText(text2).width;
   }
-  function fillCentered(ctx, text, x, y) {
+  function fillCentered(ctx, text2, x, y) {
     const prev = ctx.textAlign;
     ctx.textAlign = "left";
-    ctx.fillText(text, x - textWidth(ctx, text) / 2, y);
+    ctx.fillText(text2, x - textWidth(ctx, text2) / 2, y);
     ctx.textAlign = prev;
   }
   function drawPixelRing(ctx, x, y, size, thickness, cell) {
@@ -200,8 +200,8 @@
     ctx.arcTo(x, y, x + w, y, radius);
     ctx.closePath();
   }
-  function fillSpacedText(ctx, text, x, y, spacing) {
-    const chars = [...text];
+  function fillSpacedText(ctx, text2, x, y, spacing) {
+    const chars = [...text2];
     const widths = chars.map((char) => textWidth(ctx, char));
     const total = widths.reduce((sum, width) => sum + width, 0) + spacing * (chars.length - 1);
     let cursor = x - total / 2;
@@ -288,8 +288,8 @@
       }
     }
   }
-  function layoutLines(ctx, text, maxWidth) {
-    const words = String(text || "").split(/\s+/).filter(Boolean);
+  function layoutLines(ctx, text2, maxWidth) {
+    const words = String(text2 || "").split(/\s+/).filter(Boolean);
     const lines = [];
     let line = "";
     const pushChunked = (word) => {
@@ -326,19 +326,19 @@
     });
     return y + Math.max(lines.length - 1, 0) * lineHeight;
   }
-  function fitFontSize(ctx, text, maxWidth, maxHeight, fontFn, minSize, maxSize, lineRatio) {
+  function fitFontSize(ctx, text2, maxWidth, maxHeight, fontFn, minSize, maxSize, lineRatio) {
     let size = maxSize;
     let lines = [];
     while (size >= minSize) {
       ctx.font = fontFn(size);
-      lines = layoutLines(ctx, text, maxWidth);
+      lines = layoutLines(ctx, text2, maxWidth);
       if (lines.length * size * lineRatio <= maxHeight) break;
       size -= TX;
     }
     return { size, lines, lineHeight: size * lineRatio };
   }
   function drawCover(ctx, w, h, content = CONFIG) {
-    const { number, badge, title } = content.cover;
+    const { number, badge, title } = content.cover ?? CONFIG.cover;
     ctx.fillStyle = CREAM;
     ctx.fillRect(0, 0, w, h);
     ctx.strokeStyle = INK;
@@ -400,25 +400,28 @@
       );
     }
     drawCoverTitles(ctx, w, h, title, content.author);
+    if (content.cover?.stamp) {
+      drawStamp(ctx, w * 0.7, h - px(310), -0.3, content.cover.stamp);
+    }
   }
   function drawFrontierCover(ctx, w, h, content = CONFIG) {
-    const variant = content.variants.frontier;
+    const variant = content.variants?.frontier ?? CONFIG.variants.frontier;
     drawCoverFrame(ctx, w, h);
     drawSeriesLabel(ctx, variant.number, content.series);
     drawOutlineBadge(ctx, w, variant.badge);
     drawFrontierArt(ctx, w);
-    drawCoverTitles(ctx, w, h, variant.title, content.author);
+    drawCoverTitles(ctx, w, h, variant.title ?? [], content.author);
     drawStamp(ctx, w * 0.7, h - px(310), -0.32, variant.stamp ?? "IN PROGRESS");
   }
   function drawTeamsCover(ctx, w, h, content = CONFIG) {
-    const variant = content.variants.teams;
+    const variant = content.variants?.teams ?? CONFIG.variants.teams;
     drawCoverFrame(ctx, w, h);
     drawSeriesLabel(ctx, variant.number, content.series);
     drawOutlineBadge(ctx, w, variant.badge);
     drawTeamsArt(ctx, w);
     ctx.fillStyle = INK;
     ctx.font = glare(400, px(64));
-    variant.title.forEach((line, i) => {
+    (variant.title ?? []).forEach((line, i) => {
       ctx.fillText(line, px(64), h - px(240) + i * px(80));
     });
     ctx.font = avenir(500, px(22));
@@ -433,8 +436,8 @@
     ctx.lineTo(x + width, y);
     ctx.stroke();
   }
-  function drawIntroPage(ctx, page, x, y, maxW, bottom, ink) {
-    const text = page.body || page.heading || "";
+  function drawIntroPage(ctx, page, x, y, maxW, bottom, ink, content = CONFIG) {
+    const text2 = page.body || page.heading || "";
     const cx = x + maxW / 2;
     const measure = maxW * 0.92;
     ctx.save();
@@ -446,7 +449,7 @@
     }
     const fitted = fitFontSize(
       ctx,
-      text,
+      text2,
       measure,
       bottom - y - px(160),
       (size) => glare(400, size),
@@ -477,7 +480,7 @@
     ctx.stroke();
     ctx.fillStyle = ink;
     ctx.font = avenir(500, px(20));
-    fillCentered(ctx, CONFIG.author, cx, ruleY + px(44));
+    fillCentered(ctx, content.author ?? CONFIG.author, cx, ruleY + px(44));
     if (page?.slot) {
       ctx.font = avenir(500, px(20));
       fillCentered(ctx, String(page.slot).padStart(2, "0"), cx, bottom + px(32));
@@ -593,7 +596,7 @@
       drawLines(ctx, body.lines, x, cursor + body.size * 0.85, body.lineHeight);
     }
   }
-  function drawPage(ctx, w, h, page) {
+  function drawPage(ctx, w, h, page, content = CONFIG) {
     const black = Boolean(page?.black);
     const bg = black ? INK : PAGE;
     const ink = black ? CREAM : INK;
@@ -610,7 +613,7 @@
     const maxW = w - padX * 2;
     const layout = page?.layout || "article";
     if (layout === "intro") {
-      drawIntroPage(ctx, page, padX, top, maxW, bottom, ink);
+      drawIntroPage(ctx, page, padX, top, maxW, bottom, ink, content);
       return;
     }
     if (page?.kicker) {
@@ -644,16 +647,17 @@
     ctx.strokeStyle = INK;
     ctx.lineWidth = px(4);
     ctx.strokeRect(px(28), px(28), w - px(56), h - px(56));
+    const back = content.back ?? CONFIG.back;
     ctx.fillStyle = INK;
     ctx.font = glare(400, px(40));
-    fillCentered(ctx, content.back.title, w / 2, h / 2 - px(12));
+    fillCentered(ctx, back.title ?? "", w / 2, h / 2 - px(12));
     ctx.font = avenir(500, px(20));
-    fillCentered(ctx, content.back.credit, w / 2, h / 2 + px(36));
+    fillCentered(ctx, back.credit ?? "", w / 2, h / 2 + px(36));
   }
   function drawSide(ctx, w, h, side, content) {
     if (!side) return;
     if (side.kind === "page") {
-      drawPage(ctx, w, h, side);
+      drawPage(ctx, w, h, side, content);
       return;
     }
     if (side.kind === "blank") {
@@ -969,6 +973,223 @@
     };
   }
 
+  // src/components/Book3D/content.js
+  function isObject(value) {
+    return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+  }
+  function clone(value) {
+    if (Array.isArray(value)) return value.map(clone);
+    if (isObject(value)) {
+      const out = {};
+      Object.keys(value).forEach((key) => {
+        out[key] = clone(value[key]);
+      });
+      return out;
+    }
+    return value;
+  }
+  function isEmpty(value) {
+    if (value === void 0 || value === null) return true;
+    if (typeof value === "string") return value.trim() === "";
+    if (Array.isArray(value)) return value.length === 0;
+    if (isObject(value)) return Object.keys(value).every((key) => isEmpty(value[key]));
+    return false;
+  }
+  function merge(base, patch) {
+    if (!isObject(patch)) return isEmpty(patch) ? clone(base) : clone(patch);
+    const out = isObject(base) ? clone(base) : {};
+    Object.keys(patch).forEach((key) => {
+      const value = patch[key];
+      if (isEmpty(value)) return;
+      out[key] = isObject(value) ? merge(out[key], value) : clone(value);
+    });
+    return out;
+  }
+  function toLines(value) {
+    if (Array.isArray(value)) return value.map((line) => String(line).trim()).filter(Boolean);
+    return String(value ?? "").split(/\r?\n|\|/).map((line) => line.replace(/\s+/g, " ").trim()).filter(Boolean);
+  }
+  function normalize(override) {
+    if (!isObject(override)) return null;
+    const out = clone(override);
+    if (out.cover?.title) out.cover.title = toLines(out.cover.title);
+    if (isObject(out.variants)) {
+      Object.keys(out.variants).forEach((key) => {
+        const variant = out.variants[key];
+        if (variant?.title) variant.title = toLines(variant.title);
+      });
+    }
+    return out;
+  }
+  function resolveBookContent(override, variant = "harness") {
+    const base = clone(CONFIG);
+    base.variants = base.variants || {};
+    const variantPages = base.variants[variant]?.pages;
+    if (variantPages?.length) base.pages = variantPages;
+    const patch = normalize(override);
+    if (!patch) return base;
+    const content = merge(base, patch);
+    content.variants = content.variants || {};
+    if (variant !== "harness" && isObject(patch.cover)) {
+      content.variants[variant] = merge(content.variants[variant], patch.cover);
+    }
+    if (patch.pages?.length) {
+      if (content.variants[variant]) delete content.variants[variant].pages;
+    }
+    return content;
+  }
+
+  // webflow/book-content.js
+  var ATTRS = [
+    ["data-book-series", ["series"]],
+    ["data-book-author", ["author"]],
+    ["data-book-number", ["cover", "number"]],
+    ["data-book-badge", ["cover", "badge"]],
+    ["data-book-stamp", ["cover", "stamp"]],
+    ["data-book-title", ["cover", "title"]],
+    ["data-book-back-title", ["back", "title"]],
+    ["data-book-back-credit", ["back", "credit"]]
+  ];
+  var LAYOUTS = ["intro", "index", "sections", "article"];
+  function text(el) {
+    return el ? el.textContent.replace(/\s+/g, " ").trim() : "";
+  }
+  function textLines(el) {
+    if (!el) return [];
+    const blocks = Array.from(el.children).filter((child) => text(child));
+    if (blocks.length) return blocks.map(text);
+    return el.textContent.split(/\r?\n|\|/).map((line) => line.replace(/\s+/g, " ").trim()).filter(Boolean);
+  }
+  function put(target, path, value) {
+    if (value === "" || value === void 0 || value === null) return;
+    let node = target;
+    for (let i = 0; i < path.length - 1; i++) {
+      node[path[i]] = node[path[i]] || {};
+      node = node[path[i]];
+    }
+    node[path[path.length - 1]] = value;
+  }
+  function ownedBy(page, el, selector) {
+    return el.closest(selector) === page;
+  }
+  function readSection(el) {
+    return {
+      number: text(el.querySelector("[data-book-section-number]")),
+      heading: text(el.querySelector("[data-book-section-heading]")),
+      body: text(el.querySelector("[data-book-section-body]"))
+    };
+  }
+  function readPage(el) {
+    const items = Array.from(el.querySelectorAll("[data-book-item]")).filter((node) => ownedBy(el, node, "[data-book-page]")).map(text).filter(Boolean);
+    const sections = Array.from(el.querySelectorAll("[data-book-section]")).filter((node) => ownedBy(el, node, "[data-book-page]")).map(readSection).filter((section) => section.heading || section.body);
+    const declared = (el.getAttribute("data-book-page") || el.getAttribute("data-book-layout") || "").trim().toLowerCase();
+    const layout = LAYOUTS.includes(declared) ? declared : sections.length ? "sections" : items.length ? "index" : "article";
+    const page = { layout };
+    const kicker = text(el.querySelector("[data-book-kicker]"));
+    const heading = text(el.querySelector("[data-book-heading]"));
+    const body = text(el.querySelector("[data-book-body]"));
+    if (kicker) page.kicker = kicker;
+    if (heading) page.heading = heading;
+    if (body) page.body = body;
+    if (items.length) page.items = items;
+    if (sections.length) page.sections = sections;
+    if (el.hasAttribute("data-book-black")) {
+      page.black = el.getAttribute("data-book-black") !== "false";
+    }
+    return page;
+  }
+  function readBlock(root) {
+    if (!root) return null;
+    const pick = (selector) => text(root.querySelector(selector));
+    const content = {};
+    put(content, ["series"], pick("[data-book-series]"));
+    put(content, ["author"], pick("[data-book-author]"));
+    put(content, ["cover", "number"], pick("[data-book-cover-number]"));
+    put(content, ["cover", "badge"], pick("[data-book-cover-badge]"));
+    put(content, ["cover", "stamp"], pick("[data-book-cover-stamp]"));
+    put(content, ["back", "title"], pick("[data-book-back-title]"));
+    put(content, ["back", "credit"], pick("[data-book-back-credit]"));
+    const title = textLines(root.querySelector("[data-book-cover-title]"));
+    if (title.length) put(content, ["cover", "title"], title);
+    const pages = Array.from(root.querySelectorAll("[data-book-page]")).filter((el) => !el.parentElement?.closest("[data-book-page]")).map(readPage);
+    if (pages.length) content.pages = pages;
+    return content;
+  }
+  function readJson(root) {
+    const script = root?.matches?.("[data-book-json]") ? root : root?.querySelector?.("[data-book-json]");
+    if (!script) return null;
+    try {
+      return JSON.parse(script.textContent);
+    } catch (error) {
+      console.warn("[book] data-book-json is not valid JSON", error);
+      return null;
+    }
+  }
+  function readAttrs(canvas) {
+    const content = {};
+    ATTRS.forEach(([attr, path]) => {
+      const value = (canvas.getAttribute(attr) || "").trim();
+      if (!value) return;
+      put(content, path, value);
+    });
+    return content;
+  }
+  function findBlock(canvas, wrap, variant) {
+    const selector = canvas.getAttribute("data-book-content");
+    if (selector) {
+      const target = document.querySelector(selector);
+      if (target) return target;
+      console.warn(`[book] no element matches data-book-content="${selector}"`);
+    }
+    const forVariant = (nodes) => nodes.find((node) => (node.getAttribute("data-book-for") || "") === variant) || nodes.find((node) => !node.getAttribute("data-book-for")) || null;
+    const inWrap = wrap.querySelector("[data-book-content]");
+    if (inWrap) return inWrap;
+    const scope = canvas.closest("[data-featured-scope]") || canvas.closest("[data-featured-stage]") || canvas.closest("section");
+    if (scope) {
+      const found = forVariant(Array.from(scope.querySelectorAll("[data-book-content]")));
+      if (found) return found;
+    }
+    const all = Array.from(document.querySelectorAll("[data-book-content]"));
+    if (!all.length) return null;
+    const tagged = all.find((node) => (node.getAttribute("data-book-for") || "") === variant);
+    if (tagged) return tagged;
+    return document.querySelectorAll("[data-book]").length === 1 ? all[0] : null;
+  }
+  function globalContent(variant) {
+    const global = window.site?.bookContent;
+    if (!global || typeof global !== "object") return null;
+    const scoped = global[variant];
+    if (scoped && typeof scoped === "object") return { ...global, ...scoped };
+    return global;
+  }
+  function stack(...sources) {
+    const out = {};
+    sources.filter(Boolean).forEach((source) => {
+      Object.keys(source).forEach((key) => {
+        const value = source[key];
+        if (value === void 0) return;
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+          out[key] = { ...out[key] || {}, ...value };
+        } else {
+          out[key] = value;
+        }
+      });
+    });
+    return out;
+  }
+  function readBookContent(canvas, wrap, variant = "harness") {
+    const block = findBlock(canvas, wrap, variant);
+    if (block && !block.hasAttribute("data-book-content-visible")) {
+      block.style.display = "none";
+    }
+    return stack(
+      globalContent(variant),
+      readBlock(block),
+      readJson(block) || readJson(document),
+      readAttrs(canvas)
+    );
+  }
+
   // webflow/book-entry.js
   var COVERS = {
     harness: "cover",
@@ -1062,17 +1283,30 @@
     const rim = new DirectionalLight(15722977, 0.58);
     rim.position.set(-1.4, 2.6, -3.6);
     scene.add(rim);
-    const pages = CONFIG.variants?.[variant]?.pages;
-    const content = pages ? { ...CONFIG, pages } : CONFIG;
-    const book = createBook(cover, content);
+    let content = resolveBookContent(readBookContent(canvas, wrap, variant), variant);
+    let book = createBook(cover, content);
     const maxAniso = renderer.capabilities.getMaxAnisotropy();
-    book.meshes.forEach((mesh) => {
-      mesh.castShadow = interactive;
-      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      mats.forEach((mat) => {
-        if (mat.map) mat.map.anisotropy = maxAniso;
+    const dressBook = () => {
+      book.meshes.forEach((mesh) => {
+        mesh.castShadow = interactive;
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        mats.forEach((mat) => {
+          if (mat.map) mat.map.anisotropy = maxAniso;
+        });
       });
-    });
+    };
+    const disposeBook = (target) => {
+      target.dispose();
+      target.meshes.forEach((mesh) => {
+        mesh.geometry.dispose();
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        mats.forEach((mat) => {
+          mat.map?.dispose();
+          mat.dispose();
+        });
+      });
+    };
+    dressBook();
     const tiltGroup = new Group();
     const pivot = new Group();
     pivot.rotation.set(restX, restY, restZ);
@@ -1096,7 +1330,6 @@
     const tilt = { x: 0, y: 0 };
     let frame = 0;
     let running = true;
-    const pageCount = book.sheets.length;
     const setPointer = (event) => {
       const rect = canvas.getBoundingClientRect();
       pointer.x = (event.clientX - rect.left) / rect.width * 2 - 1;
@@ -1221,9 +1454,27 @@
     canvas.addEventListener("click", onClick);
     const api = {
       canvas,
-      pageCount,
+      get pageCount() {
+        return book.sheets.length;
+      },
+      get content() {
+        return content;
+      },
+      // Swap the copy at runtime: window.site.books.get(canvas).setContent({...})
+      setContent(next) {
+        content = resolveBookContent(next, variant);
+        const page = book.sheets.findIndex((sheet) => !sheet.opened);
+        const previous = book;
+        pivot.remove(previous.group);
+        book = createBook(cover, content);
+        pivot.add(book.group);
+        dressBook();
+        disposeBook(previous);
+        if (page > 0) book.setPage(Math.min(page, book.sheets.length));
+        return api;
+      },
       open(page = 1) {
-        book.setPage(Math.max(1, Math.min(pageCount, page)));
+        book.setPage(Math.max(1, Math.min(book.sheets.length, page)));
       },
       close() {
         book.setPage(0);
@@ -1239,7 +1490,7 @@
         wrap.removeEventListener("pointermove", onMove);
         wrap.removeEventListener("pointerleave", onLeave);
         canvas.removeEventListener("click", onClick);
-        book.dispose();
+        disposeBook(book);
         ground.geometry.dispose();
         ground.material.dispose();
         renderer.dispose();

@@ -34,7 +34,7 @@ Same pattern for `offset.js`, `button.js`, `cube-image-reveal.js`, `stats.js`.
 
 Three.js must load **before** `book.js`.
 
-`book.js` is a bundle of `book-entry.js` + `src/components/Book3D/*`. After editing either, rebuild it:
+`book.js` is a bundle of `book-entry.js` + `book-content.js` + `src/components/Book3D/*`. After editing either, rebuild it:
 
 ```
 npx esbuild webflow/book-entry.js --bundle --format=iife --alias:three=./webflow/three-shim.js --outfile=webflow/book.js
@@ -145,3 +145,75 @@ Or tween `[data-featured-book]` with GSAP — that wrapper is what the fly-in al
 Fonts: set `--font-fragment-glare`, `--font-fragment-sans`, `--font-avenir` on `:root` if those faces are loaded. Otherwise it falls back to Georgia / Arial.
 
 Structure reminder: `snippets/featured.html`.
+
+## Book copy — `data-book-content`
+
+The book used to be sealed: cover title, author, and every page lived in the script. It now reads its copy off the page, so **anything in this table is editable in Webflow or bound to a CMS field**. Leave a field out and the book falls back to the copy in the script — nothing goes blank.
+
+Add the block once per book, anywhere inside the same section as the canvas (or inside `[data-featured-book]`). The script reads it, then sets `display: none` on it, so it never shows.
+
+Set the block to **Display: none** in Designer too — the script still reads it, and that stops the copy flashing before the script runs.
+
+| Element | Attribute | What it is |
+|---|---|---|
+| Block | `data-book-content` | Wraps all the copy. Hidden automatically. |
+| Block (optional) | `data-book-for="frontier"` | Which book it feeds, when a page has more than one |
+| Text | `data-book-series` | `THE WORKING KNOWLEDGE` — top line on the cover |
+| Text | `data-book-cover-number` | `01` — sits after the series line |
+| Text | `data-book-cover-badge` | `V1.0` — the box top-right |
+| Text | `data-book-cover-stamp` | Angled stamp, e.g. `IN PROGRESS`. Leave out for none. |
+| Text | `data-book-author` | Author / credit line under the title |
+| Text | `data-book-cover-title` | Title. One child element per line, or one block with `Harness \| Engineering` |
+| Text | `data-book-back-title` | Back cover title |
+| Text | `data-book-back-credit` | Back cover credit |
+| Block | `data-book-page="intro"` | One page. Repeat the block per page, in reading order. |
+
+### Pages
+
+`data-book-page` takes the layout. Inside the page block:
+
+| Layout | Use | Children |
+|---|---|---|
+| `intro` | One big centered line | `data-book-kicker`, `data-book-body` |
+| `index` | Numbered contents | `data-book-kicker`, one `data-book-item` per line |
+| `sections` | Two write-ups per page | `data-book-kicker`, then `data-book-section` blocks holding `data-book-section-number`, `data-book-section-heading`, `data-book-section-body` |
+| `article` | Heading + paragraph | `data-book-kicker`, `data-book-heading`, `data-book-body` |
+
+Leave the value off (`data-book-page`) and the layout is picked from what's inside: sections → `sections`, items → `index`, otherwise `article`. Add `data-book-black` to a page for white-on-black.
+
+Paper, not a web page: **two sections or four index items per page**, headings short. Type auto-shrinks to fit, so overlong copy just gets small. The first page sits behind the cover; after that they pair up left / right.
+
+Structure reminder: `snippets/book-content.html`.
+
+### Quick fields on the canvas
+
+For a one-off change, skip the block and put it on `[data-book]`: `data-book-series`, `data-book-author`, `data-book-number`, `data-book-badge`, `data-book-stamp`, `data-book-title="Harness|Engineering"`, `data-book-back-title`, `data-book-back-credit`. These win over the block.
+
+### JSON, if you prefer
+
+```html
+<script type="application/json" data-book-json>
+  { "author": "TARUN RAHEJA · ACCEL · 21 SEPT 2026",
+    "cover": { "number": "01", "badge": "V1.0", "title": ["Harness", "Engineering"] },
+    "pages": [{ "layout": "intro", "kicker": "THE FILE", "body": "…" }] }
+</script>
+```
+
+Same shape as `src/components/Book3D/config.js`. Bad JSON is ignored with a console warning; the book still draws.
+
+Order, lowest wins to highest: script default → `window.site.bookContent` → `[data-book-content]` block → `[data-book-json]` → attributes on the canvas.
+
+### Change it after load
+
+```js
+const canvas = document.querySelector("[data-book]");
+window.site.books.get(canvas).setContent({
+  cover: { title: ["Coming", "Next"], badge: "V2.0" },
+  pages: [{ layout: "intro", kicker: "THE FILE", body: "New copy." }],
+});
+```
+
+The book re-renders in place, keeping the spread it was on. `.content` reads back what it is drawing.
+
+`data-book-variant` still picks the cover art (`harness`, `frontier`, `teams`); cover fields you set apply to whichever variant is on the canvas.
+

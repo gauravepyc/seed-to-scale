@@ -71,7 +71,8 @@ function clamp(value, min, max) {
 }
 
 function mountBook(canvas) {
-  const wrap = canvas.parentElement;
+  const wrap =
+    canvas.closest("[data-featured-book]") || canvas.parentElement;
   if (!wrap) return null;
 
   const variant = canvas.getAttribute("data-book-variant") || "harness";
@@ -107,8 +108,8 @@ function mountBook(canvas) {
   key.position.set(2.6, 3.8, 3.4);
   key.castShadow = interactive;
   key.shadow.mapSize.set(1024, 1024);
-  key.shadow.radius = 8;
-  key.shadow.intensity = 0.12;
+  key.shadow.radius = 12;
+  if ("intensity" in key.shadow) key.shadow.intensity = 0.12;
   key.shadow.bias = -0.0015;
   key.shadow.normalBias = 0.035;
   scene.add(key);

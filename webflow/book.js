@@ -12,6 +12,7 @@
   var Float32BufferAttribute = T.Float32BufferAttribute;
   var Group = T.Group;
   var HemisphereLight = T.HemisphereLight;
+  var LinearFilter = T.LinearFilter;
   var MathUtils = T.MathUtils;
   var Mesh = T.Mesh;
   var MeshPhysicalMaterial = T.MeshPhysicalMaterial;
@@ -664,10 +665,12 @@
     if (!canvas) {
       const w = 1024;
       const h = 1370;
+      const scale = 2;
       canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
+      canvas.width = w * scale;
+      canvas.height = h * scale;
       const ctx = canvas.getContext("2d");
+      ctx.scale(scale, scale);
       ctx.fillStyle = PAGE;
       ctx.fillRect(0, 0, w, h);
       drawSide(ctx, w, h, side, content);
@@ -675,7 +678,10 @@
     }
     const texture = new CanvasTexture(canvas);
     texture.colorSpace = SRGBColorSpace;
-    texture.anisotropy = 8;
+    texture.minFilter = LinearFilter;
+    texture.magFilter = LinearFilter;
+    texture.generateMipmaps = false;
+    texture.anisotropy = 16;
     texture.needsUpdate = true;
     return texture;
   }
@@ -971,7 +977,7 @@
       antialias: true,
       alpha: true
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, interactive ? 2 : 1.5));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, interactive ? 3 : 2));
     renderer.shadowMap.enabled = interactive;
     renderer.shadowMap.type = PCFSoftShadowMap;
     renderer.outputColorSpace = SRGBColorSpace;
@@ -1013,8 +1019,13 @@
     const pages = CONFIG.variants?.[variant]?.pages;
     const content = pages ? { ...CONFIG, pages } : CONFIG;
     const book = createBook(cover, content);
+    const maxAniso = renderer.capabilities.getMaxAnisotropy();
     book.meshes.forEach((mesh) => {
       mesh.castShadow = interactive;
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      mats.forEach((mat) => {
+        if (mat.map) mat.map.anisotropy = maxAniso;
+      });
     });
     const tiltGroup = new Group();
     const pivot = new Group();

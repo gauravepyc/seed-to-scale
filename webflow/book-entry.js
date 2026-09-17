@@ -88,7 +88,7 @@ function mountBook(canvas) {
     antialias: true,
     alpha: true,
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, interactive ? 2 : 1.5));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, interactive ? 3 : 2));
   renderer.shadowMap.enabled = interactive;
   renderer.shadowMap.type = PCFSoftShadowMap;
   renderer.outputColorSpace = SRGBColorSpace;
@@ -137,8 +137,13 @@ function mountBook(canvas) {
   const pages = CONFIG.variants?.[variant]?.pages;
   const content = pages ? { ...CONFIG, pages } : CONFIG;
   const book = createBook(cover, content);
+  const maxAniso = renderer.capabilities.getMaxAnisotropy();
   book.meshes.forEach((mesh) => {
     mesh.castShadow = interactive;
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    mats.forEach((mat) => {
+      if (mat.map) mat.map.anisotropy = maxAniso;
+    });
   });
 
   const tiltGroup = new Group();

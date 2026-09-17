@@ -1,4 +1,4 @@
-import { CanvasTexture, SRGBColorSpace } from "three";
+import { CanvasTexture, LinearFilter, SRGBColorSpace } from "three";
 import { CONFIG } from "./config";
 
 const CREAM = "#F6F2EC";
@@ -641,10 +641,12 @@ export function createPageTexture(side, content = CONFIG) {
   if (!canvas) {
     const w = 1024;
     const h = 1370;
+    const scale = 2;
     canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
+    canvas.width = w * scale;
+    canvas.height = h * scale;
     const ctx = canvas.getContext("2d");
+    ctx.scale(scale, scale);
     ctx.fillStyle = PAGE;
     ctx.fillRect(0, 0, w, h);
     drawSide(ctx, w, h, side, content);
@@ -653,7 +655,10 @@ export function createPageTexture(side, content = CONFIG) {
 
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
-  texture.anisotropy = 8;
+  texture.minFilter = LinearFilter;
+  texture.magFilter = LinearFilter;
+  texture.generateMipmaps = false;
+  texture.anisotropy = 16;
   texture.needsUpdate = true;
   return texture;
 }

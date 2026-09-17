@@ -11,6 +11,7 @@ export const DirectionalLight = T.DirectionalLight;
 export const Float32BufferAttribute = T.Float32BufferAttribute;
 export const Group = T.Group;
 export const HemisphereLight = T.HemisphereLight;
+export const LinearFilter = T.LinearFilter;
 export const MathUtils = T.MathUtils;
 export const Mesh = T.Mesh;
 export const MeshPhysicalMaterial = T.MeshPhysicalMaterial;

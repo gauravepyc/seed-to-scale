@@ -62,7 +62,7 @@ export default function BookCanvas({
       antialias: true,
       alpha: true,
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, interactive ? 2 : 1.25));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, interactive ? 3 : 2));
     renderer.shadowMap.enabled = interactive;
     renderer.shadowMap.type = PCFSoftShadowMap;
     renderer.outputColorSpace = SRGBColorSpace;
@@ -107,8 +107,13 @@ export default function BookCanvas({
     scene.add(rim);
 
     const book = createBook(cover, content);
+    const maxAniso = renderer.capabilities.getMaxAnisotropy();
     book.meshes.forEach((mesh) => {
       mesh.castShadow = interactive;
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      mats.forEach((mat) => {
+        if (mat.map) mat.map.anisotropy = maxAniso;
+      });
     });
     const tiltGroup = new Group();
     const pivot = new Group();

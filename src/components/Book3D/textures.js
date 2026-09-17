@@ -6,6 +6,11 @@ const INK = "#222222";
 const CORAL = "#FF7A61";
 const CORAL_DEEP = "#FF6B4A";
 const PAGE = "#EFE9E1";
+const TX = 2;
+
+function px(n) {
+  return n * TX;
+}
 
 function cssFont(name) {
   if (typeof document === "undefined") return "sans-serif";
@@ -28,11 +33,7 @@ function avenir(weight, size) {
 }
 
 function textWidth(ctx, text) {
-  ctx.save();
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  const width = ctx.measureText(text).width;
-  ctx.restore();
-  return width;
+  return ctx.measureText(text).width;
 }
 
 function fillCentered(ctx, text, x, y) {
@@ -49,15 +50,15 @@ function drawPixelRing(ctx, x, y, size, thickness, cell) {
     ctx.fillRect(cx, cy, cell - gap, cell - gap);
   };
 
-  for (let px = x; px < x + size; px += cell) {
-    for (let py = y; py < y + thickness; py += cell) drawCell(px, py);
-    for (let py = y + size - thickness; py < y + size; py += cell)
-      drawCell(px, py);
+  for (let ix = x; ix < x + size; ix += cell) {
+    for (let iy = y; iy < y + thickness; iy += cell) drawCell(ix, iy);
+    for (let iy = y + size - thickness; iy < y + size; iy += cell)
+      drawCell(ix, iy);
   }
-  for (let py = y; py < y + size; py += cell) {
-    for (let px = x; px < x + thickness; px += cell) drawCell(px, py);
-    for (let px = x + size - thickness; px < x + size; px += cell)
-      drawCell(px, py);
+  for (let iy = y; iy < y + size; iy += cell) {
+    for (let ix = x; ix < x + thickness; ix += cell) drawCell(ix, iy);
+    for (let ix = x + size - thickness; ix < x + size; ix += cell)
+      drawCell(ix, iy);
   }
 }
 
@@ -70,36 +71,36 @@ function drawCoverFrame(ctx, w, h) {
   ctx.fillStyle = CREAM;
   ctx.fillRect(0, 0, w, h);
   ctx.strokeStyle = INK;
-  ctx.lineWidth = 4;
-  ctx.strokeRect(28, 28, w - 56, h - 56);
+  ctx.lineWidth = px(4);
+  ctx.strokeRect(px(28), px(28), w - px(56), h - px(56));
 }
 
 function drawSeriesLabel(ctx, number, series = CONFIG.series) {
   ctx.fillStyle = INK;
-  ctx.font = avenir(500, 28);
-  ctx.fillText(`${series}  ·  ${number}`, 64, 110);
+  ctx.font = avenir(500, px(28));
+  ctx.fillText(`${series}  ·  ${number}`, px(64), px(110));
 }
 
 function drawFilledBadge(ctx, w, label) {
   ctx.fillStyle = INK;
-  ctx.fillRect(w - 168, 72, 92, 36);
+  ctx.fillRect(w - px(168), px(72), px(92), px(36));
   ctx.fillStyle = CREAM;
-  ctx.font = avenir(500, 20);
-  ctx.fillText(label, w - 148, 97);
+  ctx.font = avenir(500, px(20));
+  ctx.fillText(label, w - px(148), px(97));
 }
 
 function drawOutlineBadge(ctx, w, label) {
-  ctx.font = avenir(500, 18);
+  ctx.font = avenir(500, px(18));
   const textW = textWidth(ctx, label);
-  const padX = 14;
-  const boxW = Math.max(118, textW + padX * 2);
-  const boxH = 40;
-  const x = w - 68 - boxW;
+  const padX = px(14);
+  const boxW = Math.max(px(118), textW + padX * 2);
+  const boxH = px(40);
+  const x = w - px(68) - boxW;
   ctx.strokeStyle = INK;
-  ctx.lineWidth = 3;
-  ctx.strokeRect(x, 70, boxW, boxH);
+  ctx.lineWidth = px(3);
+  ctx.strokeRect(x, px(70), boxW, boxH);
   ctx.fillStyle = INK;
-  ctx.fillText(label, x + padX, 97);
+  ctx.fillText(label, x + padX, px(97));
 }
 
 function roundedRect(ctx, x, y, w, h, r) {
@@ -134,30 +135,30 @@ function drawStamp(ctx, x, y, rotation, label = "IN PROGRESS") {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  const w = Math.max(420, 48 + [...label].length * 28);
-  const h = 112;
+  const w = Math.max(px(420), px(48) + [...label].length * px(28));
+  const h = px(112);
   const color = "#FF3621";
 
   ctx.strokeStyle = color;
   ctx.fillStyle = "rgba(255, 54, 33, 0.07)";
-  ctx.lineWidth = 10;
-  roundedRect(ctx, -w / 2, -h / 2, w, h, 12);
+  ctx.lineWidth = px(10);
+  roundedRect(ctx, -w / 2, -h / 2, w, h, px(12));
   ctx.fill();
   ctx.stroke();
 
-  ctx.lineWidth = 3;
-  roundedRect(ctx, -w / 2 + 13, -h / 2 + 13, w - 26, h - 26, 7);
+  ctx.lineWidth = px(3);
+  roundedRect(ctx, -w / 2 + px(13), -h / 2 + px(13), w - px(26), h - px(26), px(7));
   ctx.stroke();
 
   ctx.fillStyle = color;
-  ctx.font = avenir(500, 34);
-  fillSpacedText(ctx, label, 0, 2, 6);
+  ctx.font = avenir(500, px(34));
+  fillSpacedText(ctx, label, 0, px(2), px(6));
 
   ctx.globalAlpha = 0.18;
   for (let i = 0; i < 28; i++) {
-    const px = -w / 2 + 8 + hash(i, 2) * (w - 16);
-    const py = -h / 2 + 6 + hash(i, 9) * (h - 12);
-    ctx.fillRect(px, py, 2.4, 2.4);
+    const ix = -w / 2 + px(8) + hash(i, 2) * (w - px(16));
+    const iy = -h / 2 + px(6) + hash(i, 9) * (h - px(12));
+    ctx.fillRect(ix, iy, px(2.4), px(2.4));
   }
   ctx.globalAlpha = 1;
   ctx.restore();
@@ -165,18 +166,18 @@ function drawStamp(ctx, x, y, rotation, label = "IN PROGRESS") {
 
 function drawCoverTitles(ctx, w, h, lines, author = CONFIG.author) {
   ctx.fillStyle = INK;
-  ctx.font = glare(400, 72);
+  ctx.font = glare(400, px(72));
   lines.forEach((line, i) => {
-    ctx.fillText(line, 64, h - 220 + i * 80);
+    ctx.fillText(line, px(64), h - px(220) + i * px(80));
   });
-  ctx.font = avenir(500, 22);
-  ctx.fillText(author, 64, h - 84);
+  ctx.font = avenir(500, px(22));
+  ctx.fillText(author, px(64), h - px(84));
 }
 
 function drawFrontierArt(ctx, w) {
-  const x = 150;
-  const y = 190;
-  const size = w - 300;
+  const x = px(150);
+  const y = px(190);
+  const size = w - px(300);
   const cols = 18;
   const cell = size / cols;
   const palette = ["#F6D5C4", "#F0B8A4", "#E8C4B4", "#FADFD2", "#E7A992", "#F3E6DC"];
@@ -196,9 +197,9 @@ function drawFrontierArt(ctx, w) {
 }
 
 function drawTeamsArt(ctx, w) {
-  const x = 150;
-  const y = 190;
-  const size = w - 300;
+  const x = px(150);
+  const y = px(190);
+  const size = w - px(300);
   const cols = 42;
   const cell = size / cols;
 
@@ -266,7 +267,7 @@ function fitFontSize(ctx, text, maxWidth, maxHeight, fontFn, minSize, maxSize, l
     ctx.font = fontFn(size);
     lines = layoutLines(ctx, text, maxWidth);
     if (lines.length * size * lineRatio <= maxHeight) break;
-    size -= 1;
+    size -= TX;
   }
   return { size, lines, lineHeight: size * lineRatio };
 }
@@ -276,20 +277,20 @@ function drawCover(ctx, w, h, content = CONFIG) {
   ctx.fillStyle = CREAM;
   ctx.fillRect(0, 0, w, h);
   ctx.strokeStyle = INK;
-  ctx.lineWidth = 4;
-  ctx.strokeRect(28, 28, w - 56, h - 56);
+  ctx.lineWidth = px(4);
+  ctx.strokeRect(px(28), px(28), w - px(56), h - px(56));
 
   drawSeriesLabel(ctx, number, content.series);
 
   ctx.fillStyle = INK;
-  ctx.fillRect(w - 168, 72, 92, 36);
+  ctx.fillRect(w - px(168), px(72), px(92), px(36));
   ctx.fillStyle = CREAM;
-  ctx.font = avenir(500, 20);
-  ctx.fillText(badge, w - 148, 97);
+  ctx.font = avenir(500, px(20));
+  ctx.fillText(badge, w - px(148), px(97));
 
-  const artX = 150;
-  const artY = 180;
-  const artSize = w - 300;
+  const artX = px(150);
+  const artY = px(180);
+  const artSize = w - px(300);
   const cell = artSize / 26;
   ctx.fillStyle = CORAL;
   for (let i = 0; i < 26; i++) {
@@ -347,7 +348,7 @@ function drawFrontierCover(ctx, w, h, content = CONFIG) {
   drawOutlineBadge(ctx, w, variant.badge);
   drawFrontierArt(ctx, w);
   drawCoverTitles(ctx, w, h, variant.title, content.author);
-  drawStamp(ctx, w * 0.7, h - 310, -0.32, variant.stamp ?? "IN PROGRESS");
+  drawStamp(ctx, w * 0.7, h - px(310), -0.32, variant.stamp ?? "IN PROGRESS");
 }
 
 function drawTeamsCover(ctx, w, h, content = CONFIG) {
@@ -357,18 +358,18 @@ function drawTeamsCover(ctx, w, h, content = CONFIG) {
   drawOutlineBadge(ctx, w, variant.badge);
   drawTeamsArt(ctx, w);
   ctx.fillStyle = INK;
-  ctx.font = glare(400, 64);
+  ctx.font = glare(400, px(64));
   variant.title.forEach((line, i) => {
-    ctx.fillText(line, 64, h - 240 + i * 80);
+    ctx.fillText(line, px(64), h - px(240) + i * px(80));
   });
-  ctx.font = avenir(500, 22);
-  ctx.fillText(content.author, 64, h - 84);
-  drawStamp(ctx, w * 0.7, h - 310, -0.28, variant.stamp ?? "UPCOMING");
+  ctx.font = avenir(500, px(22));
+  ctx.fillText(content.author, px(64), h - px(84));
+  drawStamp(ctx, w * 0.7, h - px(310), -0.28, variant.stamp ?? "UPCOMING");
 }
 
 function drawHairline(ctx, x, y, width, color) {
   ctx.strokeStyle = color;
-  ctx.lineWidth = 2.5;
+  ctx.lineWidth = px(2);
   ctx.beginPath();
   ctx.moveTo(x, y);
   ctx.lineTo(x + width, y);
@@ -381,33 +382,33 @@ function drawIntroPage(ctx, page, x, y, maxW, bottom, ink) {
   const measure = maxW * 0.92;
 
   ctx.save();
-  ctx.textAlign = "center";
+  ctx.textAlign = "left";
   ctx.fillStyle = ink;
 
   if (page?.kicker) {
-    ctx.font = avenir(500, 22);
-    fillSpacedText(ctx, page.kicker, cx, y, 8);
+    ctx.font = avenir(500, px(22));
+    fillSpacedText(ctx, page.kicker, cx, y, px(8));
   }
 
   const fitted = fitFontSize(
     ctx,
     text,
     measure,
-    bottom - y - 160,
+    bottom - y - px(160),
     (size) => glare(400, size),
-    44,
-    68,
+    px(44),
+    px(68),
     1.28
   );
   const blockHeight =
     fitted.size * 0.92 + Math.max(fitted.lines.length - 1, 0) * fitted.lineHeight;
-  const contentTop = y + (page?.kicker ? 88 : 12);
-  const contentBottom = bottom - 110;
+  const contentTop = y + (page?.kicker ? px(88) : px(12));
+  const contentBottom = bottom - px(110);
   const start =
     contentTop + Math.max(0, (contentBottom - contentTop - blockHeight) * 0.38);
 
-  ctx.textAlign = "center";
   ctx.fillStyle = ink;
+  ctx.textAlign = "center";
   ctx.font = glare(400, fitted.size);
   const lastY = drawLines(
     ctx,
@@ -417,21 +418,21 @@ function drawIntroPage(ctx, page, x, y, maxW, bottom, ink) {
     fitted.lineHeight
   );
 
-  const ruleY = lastY + 52;
+  const ruleY = lastY + px(52);
   ctx.strokeStyle = ink;
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = px(1.5);
   ctx.beginPath();
-  ctx.moveTo(cx - 36, ruleY);
-  ctx.lineTo(cx + 36, ruleY);
+  ctx.moveTo(cx - px(36), ruleY);
+  ctx.lineTo(cx + px(36), ruleY);
   ctx.stroke();
 
   ctx.fillStyle = ink;
-  ctx.font = avenir(500, 20);
-  fillCentered(ctx, CONFIG.author, cx, ruleY + 44);
+  ctx.font = avenir(500, px(20));
+  fillCentered(ctx, CONFIG.author, cx, ruleY + px(44));
 
   if (page?.slot) {
-    ctx.font = avenir(500, 20);
-    fillCentered(ctx, String(page.slot).padStart(2, "0"), cx, bottom + 32);
+    ctx.font = avenir(500, px(20));
+    fillCentered(ctx, String(page.slot).padStart(2, "0"), cx, bottom + px(32));
   }
 
   ctx.restore();
@@ -447,22 +448,22 @@ function drawIndexPage(ctx, page, x, y, maxW, bottom, ink) {
     if (i > 0) drawHairline(ctx, x, y0, maxW, ink);
 
     ctx.fillStyle = ink;
-    ctx.font = avenir(500, 28);
-    ctx.fillText(String(i + 1).padStart(2, "0"), x, y0 + 48);
+    ctx.font = avenir(500, px(28));
+    ctx.fillText(String(i + 1).padStart(2, "0"), x, y0 + px(48));
 
     const fitted = fitFontSize(
       ctx,
       item,
       maxW,
-      slot - 84,
+      slot - px(84),
       (size) => glare(400, size),
-      36,
-      50,
+      px(36),
+      px(50),
       1.16
     );
     ctx.fillStyle = ink;
     ctx.font = glare(400, fitted.size);
-    drawLines(ctx, fitted.lines, x, y0 + 48 + fitted.size + 18, fitted.lineHeight);
+    drawLines(ctx, fitted.lines, x, y0 + px(48) + fitted.size + px(18), fitted.lineHeight);
   });
 }
 
@@ -473,25 +474,25 @@ function drawSectionsPage(ctx, page, x, y, maxW, bottom, ink) {
 
   sections.forEach((section, i) => {
     const y0 = y + i * slot;
-    const y1 = y0 + slot - 16;
+    const y1 = y0 + slot - px(16);
     if (i > 0) drawHairline(ctx, x, y0, maxW, ink);
 
-    let cursor = y0 + 44;
+    let cursor = y0 + px(44);
     if (section.number) {
       ctx.fillStyle = ink;
-      ctx.font = avenir(500, 26);
+      ctx.font = avenir(500, px(26));
       ctx.fillText(section.number, x, cursor);
-      cursor += 28;
+      cursor += px(28);
     }
 
     const heading = fitFontSize(
       ctx,
       section.heading,
       maxW,
-      Math.min(240, (y1 - cursor) * 0.4),
+      Math.min(px(240), (y1 - cursor) * 0.4),
       (size) => glare(400, size),
-      32,
-      46,
+      px(32),
+      px(46),
       1.16
     );
     ctx.fillStyle = ink;
@@ -504,15 +505,15 @@ function drawSectionsPage(ctx, page, x, y, maxW, bottom, ink) {
       heading.lineHeight
     );
 
-    const bodyTop = headingBottom + 64;
+    const bodyTop = headingBottom + px(64);
     const body = fitFontSize(
       ctx,
       section.body,
       maxW,
-      Math.max(80, y1 - bodyTop),
+      Math.max(px(80), y1 - bodyTop),
       (size) => sans(400, size),
-      24,
-      34,
+      px(24),
+      px(34),
       1.42
     );
     ctx.fillStyle = ink;
@@ -528,26 +529,26 @@ function drawArticlePage(ctx, page, x, y, maxW, bottom, ink) {
       ctx,
       page.heading,
       maxW,
-      280,
+      px(280),
       (size) => glare(400, size),
-      40,
-      64,
+      px(40),
+      px(64),
       1.16
     );
     ctx.fillStyle = ink;
     ctx.font = glare(400, heading.size);
     cursor = drawLines(ctx, heading.lines, x, cursor + heading.size, heading.lineHeight);
-    cursor += 64;
+    cursor += px(64);
   }
   if (page?.body) {
     const body = fitFontSize(
       ctx,
       page.body,
       maxW,
-      Math.max(80, bottom - cursor),
+      Math.max(px(80), bottom - cursor),
       (size) => sans(400, size),
-      26,
-      36,
+      px(26),
+      px(36),
       1.4
     );
     ctx.fillStyle = ink;
@@ -564,14 +565,14 @@ function drawPage(ctx, w, h, page) {
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, w, h);
   ctx.strokeStyle = ink;
-  ctx.lineWidth = 4;
+  ctx.lineWidth = px(3);
   ctx.lineJoin = "miter";
   ctx.setLineDash([]);
-  ctx.strokeRect(40, 40, w - 80, h - 80);
+  ctx.strokeRect(px(40), px(40), w - px(80), h - px(80));
 
-  const padX = 88;
-  const top = 118;
-  const bottom = h - 96;
+  const padX = px(88);
+  const top = px(118);
+  const bottom = h - px(96);
   const maxW = w - padX * 2;
   const layout = page?.layout || "article";
 
@@ -582,11 +583,11 @@ function drawPage(ctx, w, h, page) {
 
   if (page?.kicker) {
     ctx.fillStyle = ink;
-    ctx.font = avenir(500, 26);
+    ctx.font = avenir(500, px(26));
     ctx.fillText(page.kicker, padX, top);
   }
 
-  const contentTop = page?.kicker ? top + 52 : top;
+  const contentTop = page?.kicker ? top + px(52) : top;
   if (layout === "index") {
     drawIndexPage(ctx, page, padX, contentTop, maxW, bottom, ink);
   } else if (layout === "sections") {
@@ -597,9 +598,9 @@ function drawPage(ctx, w, h, page) {
 
   if (page?.slot) {
     ctx.fillStyle = ink;
-    ctx.font = avenir(500, 20);
+    ctx.font = avenir(500, px(20));
     ctx.textAlign = "right";
-    ctx.fillText(String(page.slot).padStart(2, "0"), w - padX, h - 64);
+    ctx.fillText(String(page.slot).padStart(2, "0"), w - padX, h - px(64));
     ctx.textAlign = "left";
   }
 }
@@ -613,16 +614,14 @@ function drawBackCover(ctx, w, h, content = CONFIG) {
   ctx.fillStyle = CREAM;
   ctx.fillRect(0, 0, w, h);
   ctx.strokeStyle = INK;
-  ctx.lineWidth = 4;
-  ctx.strokeRect(28, 28, w - 56, h - 56);
+  ctx.lineWidth = px(4);
+  ctx.strokeRect(px(28), px(28), w - px(56), h - px(56));
 
   ctx.fillStyle = INK;
-  ctx.textAlign = "center";
-  ctx.font = glare(400, 40);
-  ctx.fillText(content.back.title, w / 2, h / 2 - 12);
-  ctx.font = avenir(500, 20);
-  ctx.fillText(content.back.credit, w / 2, h / 2 + 36);
-  ctx.textAlign = "left";
+  ctx.font = glare(400, px(40));
+  fillCentered(ctx, content.back.title, w / 2, h / 2 - px(12));
+  ctx.font = avenir(500, px(20));
+  fillCentered(ctx, content.back.credit, w / 2, h / 2 + px(36));
 }
 
 function drawSide(ctx, w, h, side, content) {
@@ -660,14 +659,12 @@ export function createPageTexture(side, content = CONFIG) {
   });
   let canvas = canvasCache.get(key);
   if (!canvas) {
-    const w = 1024;
-    const h = 1370;
-    const scale = 2;
+    const w = px(1024);
+    const h = px(1370);
     canvas = document.createElement("canvas");
-    canvas.width = w * scale;
-    canvas.height = h * scale;
+    canvas.width = w;
+    canvas.height = h;
     const ctx = canvas.getContext("2d");
-    ctx.scale(scale, scale);
     ctx.fillStyle = PAGE;
     ctx.fillRect(0, 0, w, h);
     drawSide(ctx, w, h, side, content);

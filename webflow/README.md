@@ -97,8 +97,10 @@ Copy, images, button, and the right-column background are Designer / CMS. The 3D
 | Element | Attribute | What it is |
 |---|---|---|
 | Section | `data-featured-scope` | Scroll trigger for the fly-in |
-| Section (optional) | `data-book-scroll="1"` | Opens the book to page `1` while in view, closes when you leave. Use `"open"` for the first spread. |
-| Stage | `data-featured-stage` | Right column. Set height, overflow hidden, background image/color, `perspective: 1400px` |
+| Section (optional) | `data-book-scroll="1"` | **Don't add this** if you want the book closed until click. Only add it if the book should open on scroll. |
+| Stage | `data-featured-stage` | Right column. Relative, overflow hidden, min-height ~42vw, `perspective: 1400px` |
+| Strips canvas | `data-featured-strips` | Background bars. First child of the stage, absolute fill |
+| Overlay (optional) | `data-featured-overlay` | Empty div. Orange wash over the strips |
 | Book wrap | `data-featured-book` | GSAP flies this in. Position absolute, fill the stage |
 | Canvas | `data-book` | The 3D book |
 | Canvas (optional) | `data-book-variant="harness"` | `harness`, `frontier`, or `teams` |
@@ -109,11 +111,12 @@ Copy, images, button, and the right-column background are Designer / CMS. The 3D
 **In Webflow**
 
 1. Two-column section. Left: kicker, title, body, author, button — all Webflow text / CMS.
-2. Right (`data-featured-stage`): relative, overflow hidden, min-height ~42vw, background image if you want strips.
-3. Inside the stage, a full-size wrap (`data-featured-book`) with `position: absolute; inset: 0`.
-4. Embed a canvas inside that wrap. Attributes: `data-book`, `data-book-variant="harness"`.
-5. Canvas CSS: `width: 100%; height: 100%; display: block`.
-6. Put `data-featured-scope` on the section. Add `data-book-scroll="1"` if the book should open on scroll.
+2. Right (`data-featured-stage`): relative, overflow hidden, min-height ~42vw.
+3. First child of the stage: Embed `<canvas data-featured-strips></canvas>`. Optional empty div with `data-featured-overlay` on top of it.
+4. Then a full-size wrap (`data-featured-book`) with `position: absolute; inset: 0; z-index: 2`.
+5. Embed a canvas inside that wrap. Attributes: `data-book`, `data-book-variant="harness"`.
+6. Canvas CSS: `width: 100%; height: 100%; display: block`.
+7. Put `data-featured-scope` on the section. Leave the book closed until click — do **not** add `data-book-scroll` unless you want auto-open.
 
 Click still turns pages. Scroll uses the same open / close as click.
 

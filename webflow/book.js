@@ -129,6 +129,19 @@
   function avenir(weight, size) {
     return `${weight} ${size}px ${cssFont("--font-avenir")}, Arial, sans-serif`;
   }
+  function textWidth(ctx, text) {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    const width = ctx.measureText(text).width;
+    ctx.restore();
+    return width;
+  }
+  function fillCentered(ctx, text, x, y) {
+    const prev = ctx.textAlign;
+    ctx.textAlign = "left";
+    ctx.fillText(text, x - textWidth(ctx, text) / 2, y);
+    ctx.textAlign = prev;
+  }
   function drawPixelRing(ctx, x, y, size, thickness, cell) {
     ctx.fillStyle = CORAL;
     const gap = Math.max(1, cell * 0.18);
@@ -164,7 +177,7 @@
   }
   function drawOutlineBadge(ctx, w, label) {
     ctx.font = avenir(500, 18);
-    const textW = ctx.measureText(label).width;
+    const textW = textWidth(ctx, label);
     const padX = 14;
     const boxW = Math.max(118, textW + padX * 2);
     const boxH = 40;
@@ -187,7 +200,7 @@
   }
   function fillSpacedText(ctx, text, x, y, spacing) {
     const chars = [...text];
-    const widths = chars.map((char) => ctx.measureText(char).width);
+    const widths = chars.map((char) => textWidth(ctx, char));
     const total = widths.reduce((sum, width) => sum + width, 0) + spacing * (chars.length - 1);
     let cursor = x - total / 2;
     ctx.textAlign = "left";
@@ -281,7 +294,7 @@
       let chunk = "";
       for (const ch of word) {
         const next = chunk + ch;
-        if (chunk && ctx.measureText(next).width > maxWidth) {
+        if (chunk && textWidth(ctx, next) > maxWidth) {
           lines.push(chunk);
           chunk = ch;
         } else {
@@ -292,19 +305,23 @@
     };
     for (const word of words) {
       const test = line ? `${line} ${word}` : word;
-      if (ctx.measureText(test).width <= maxWidth) {
+      if (textWidth(ctx, test) <= maxWidth) {
         line = test;
         continue;
       }
       if (line) lines.push(line);
-      if (ctx.measureText(word).width <= maxWidth) line = word;
+      if (textWidth(ctx, word) <= maxWidth) line = word;
       else pushChunked(word);
     }
     if (line) lines.push(line);
     return lines;
   }
   function drawLines(ctx, lines, x, y, lineHeight) {
-    lines.forEach((line, i) => ctx.fillText(line, x, y + i * lineHeight));
+    const centered = ctx.textAlign === "center";
+    lines.forEach((line, i) => {
+      if (centered) fillCentered(ctx, line, x, y + i * lineHeight);
+      else ctx.fillText(line, x, y + i * lineHeight);
+    });
     return y + Math.max(lines.length - 1, 0) * lineHeight;
   }
   function fitFontSize(ctx, text, maxWidth, maxHeight, fontFn, minSize, maxSize, lineRatio) {
@@ -408,7 +425,7 @@
   }
   function drawHairline(ctx, x, y, width, color) {
     ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.moveTo(x, y);
     ctx.lineTo(x + width, y);
@@ -458,10 +475,10 @@
     ctx.stroke();
     ctx.fillStyle = ink;
     ctx.font = avenir(500, 20);
-    ctx.fillText(CONFIG.author, cx, ruleY + 44);
+    fillCentered(ctx, CONFIG.author, cx, ruleY + 44);
     if (page?.slot) {
       ctx.font = avenir(500, 20);
-      ctx.fillText(String(page.slot).padStart(2, "0"), cx, bottom + 32);
+      fillCentered(ctx, String(page.slot).padStart(2, "0"), cx, bottom + 32);
     }
     ctx.restore();
   }
@@ -581,7 +598,9 @@
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
     ctx.strokeStyle = ink;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 4;
+    ctx.lineJoin = "miter";
+    ctx.setLineDash([]);
     ctx.strokeRect(40, 40, w - 80, h - 80);
     const padX = 88;
     const top = 118;

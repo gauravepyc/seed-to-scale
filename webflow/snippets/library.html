@@ -1,0 +1,79 @@
+<!--
+  Library row — three book covers, side by side.
+
+  Build the grid, borders, type, and the overlay's look in Webflow.
+  library.js only does the scroll fly-in and the hover fade.
+  The covers themselves are drawn by book.js.
+
+  Card 1 and 3 slide in from the sides, card 2 drops in.
+  Works with any number of cards.
+-->
+
+<section>
+  <div>
+    <p>THE LIBRARY</p>
+    <h2>Research. One evolving thesis.</h2>
+  </div>
+
+  <div data-library-row>
+
+    <a href="/book-detail" data-library-card>
+      <div data-library-book>
+        <canvas
+          data-book
+          data-book-variant="harness"
+          data-book-interactive="false"
+          data-book-distance="3.28"
+          data-book-rest="0.04,-0.22,-0.08"
+        ></canvas>
+      </div>
+      <div data-library-overlay>
+        <div data-button>
+          <div data-button-fill></div>
+          <div>
+            <div data-button-label>Read the book!</div>
+            <div data-button-label-hover>Read the book!</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3>Harness Engineering Playbook</h3>
+        <p>The model is rented. The harness is what you own, and it's where the margin lives.</p>
+        <div>
+          <span>V1.2</span>
+          <span>Verified Aug 2026</span>
+          <span>Last edited 12 Aug 2026</span>
+        </div>
+      </div>
+    </a>
+
+    <div data-library-card>
+      <div data-library-book>
+        <canvas
+          data-book
+          data-book-variant="frontier"
+          data-book-interactive="false"
+          data-book-distance="3.28"
+          data-book-rest="0.05,0.05,0.02"
+        ></canvas>
+      </div>
+      <div data-library-overlay><span>COMING SOON!</span></div>
+      <div><h3>COMING SOON!</h3></div>
+    </div>
+
+    <div data-library-card>
+      <div data-library-book>
+        <canvas
+          data-book
+          data-book-variant="teams"
+          data-book-interactive="false"
+          data-book-distance="3.28"
+          data-book-rest="0.03,0.2,0.07"
+        ></canvas>
+      </div>
+      <div data-library-overlay><span>COMING SOON!</span></div>
+      <div><h3>COMING SOON!</h3></div>
+    </div>
+
+  </div>
+</section>

@@ -1144,7 +1144,7 @@
     const forVariant = (nodes) => nodes.find((node) => (node.getAttribute("data-book-for") || "") === variant) || nodes.find((node) => !node.getAttribute("data-book-for")) || null;
     const inWrap = wrap.querySelector("[data-book-content]");
     if (inWrap) return inWrap;
-    const scope = canvas.closest("[data-featured-scope]") || canvas.closest("[data-featured-stage]") || canvas.closest("section");
+    const scope = canvas.closest("[data-library-card]") || canvas.closest("[data-featured-scope]") || canvas.closest("[data-featured-stage]") || canvas.closest("section");
     if (scope) {
       const found = forVariant(Array.from(scope.querySelectorAll("[data-book-content]")));
       if (found) return found;
@@ -1216,7 +1216,7 @@
     return Math.min(max, Math.max(min, value));
   }
   function mountBook(canvas) {
-    const wrap = canvas.closest("[data-featured-book]") || canvas.parentElement;
+    const wrap = canvas.closest("[data-featured-book], [data-library-book], [data-book-wrap]") || canvas.parentElement;
     if (!wrap) return null;
     const variant = canvas.getAttribute("data-book-variant") || "harness";
     const interactive = canvas.getAttribute("data-book-interactive") !== "false";

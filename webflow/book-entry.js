@@ -73,7 +73,8 @@ function clamp(value, min, max) {
 
 function mountBook(canvas) {
   const wrap =
-    canvas.closest("[data-featured-book]") || canvas.parentElement;
+    canvas.closest("[data-featured-book], [data-library-book], [data-book-wrap]") ||
+    canvas.parentElement;
   if (!wrap) return null;
 
   const variant = canvas.getAttribute("data-book-variant") || "harness";

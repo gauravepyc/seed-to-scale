@@ -17,6 +17,7 @@ You build the UI. Scripts only need these attributes.
 <script src="BOOK_JS_URL"></script>
 <script src="FEATURED_JS_URL"></script>
 <script src="FEATURED_STRIPS_JS_URL"></script>
+<script src="LIBRARY_JS_URL"></script>
 ```
 
 Upload to **Assets will fail** — Webflow does not accept `.js` files there.
@@ -98,6 +99,33 @@ Structure reminder: `snippets/cube-image-reveal.html`.
 Spins once (`top 78%`). Reuse the same attributes on any later stats block.
 
 Structure reminder: `snippets/stats.html`.
+
+## Library row — `library.js`
+
+Three (or any number of) covers in a row. Outer cards slide in from the sides on scroll, the middle one drops in. Everything else — grid, borders, type, meta pills, the overlay's look — is Designer / CMS.
+
+| Element | Attribute | What it is |
+|---|---|---|
+| Row | `data-library-row` | Holds the cards. Scroll trigger. |
+| Card | `data-library-card` | One card. Link it if the book is ready. |
+| Book wrap | `data-library-book` | Wraps the canvas. This is what flies in. Give it a fixed height. |
+| Canvas | `data-book` | The cover. Add `data-book-interactive="false"` so it does not open. |
+| Overlay (optional) | `data-library-overlay` | Fades in while the card is hovered. Holds the button or "Coming soon". |
+
+**In Webflow**
+
+1. Section: kicker + heading on top, then a Div with `data-library-row`, display flex.
+2. Inside the row, one Link block (or Div) per card: `data-library-card`, flex 1, right border.
+3. Inside each card, a Div with `data-library-book` — relative, fixed height (~30vw), overflow hidden.
+4. Embed a canvas in it: `data-book`, `data-book-variant="harness"`, `data-book-interactive="false"`, `data-book-distance="3.28"`, `data-book-rest="0.04,-0.22,-0.08"`.
+5. Optional overlay div inside the card: absolute, covering the book, with the button or a "Coming soon" label. `data-library-overlay`. The script starts it hidden and fades it on hover — no Webflow interaction needed.
+6. Title, body, and meta pills below: plain Webflow text or CMS fields.
+
+Use a different `data-book-variant` per card (`harness`, `frontier`, `teams`) so the three covers differ. Cover copy per card follows the same rules as everywhere else: drop a `[data-book-content]` block inside the card and it feeds that card's book only.
+
+`data-book-rest` is the rest tilt in radians, `x,y,z`. The three in the snippet match the live site.
+
+Structure reminder: `snippets/library.html`.
 
 ## Featured book — `book.js` + `featured.js`
 

@@ -159,6 +159,7 @@ function findBlock(canvas, wrap, variant) {
   if (inWrap) return inWrap;
 
   const scope =
+    canvas.closest("[data-library-card]") ||
     canvas.closest("[data-featured-scope]") ||
     canvas.closest("[data-featured-stage]") ||
     canvas.closest("section");

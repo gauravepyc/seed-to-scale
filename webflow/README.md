@@ -16,6 +16,7 @@ You build the UI. Scripts only need these attributes.
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js"></script>
 <script src="BOOK_JS_URL"></script>
 <script src="FEATURED_JS_URL"></script>
+<script src="FEATURED_STRIPS_JS_URL"></script>
 ```
 
 Upload to **Assets will fail** — Webflow does not accept `.js` files there.
@@ -26,6 +27,7 @@ Host the scripts and paste the URLs in Footer custom code. Easiest: GitHub + jsD
 https://cdn.jsdelivr.net/gh/gauravepyc/seed-to-scale@main/webflow/global.js
 https://cdn.jsdelivr.net/gh/gauravepyc/seed-to-scale@main/webflow/book.js
 https://cdn.jsdelivr.net/gh/gauravepyc/seed-to-scale@main/webflow/featured.js
+https://cdn.jsdelivr.net/gh/gauravepyc/seed-to-scale@main/webflow/featured-strips.js
 ```
 
 Same pattern for `offset.js`, `button.js`, `cube-image-reveal.js`, `stats.js`.
@@ -99,7 +101,7 @@ Copy, images, button, and the right-column background are Designer / CMS. The 3D
 | Section | `data-featured-scope` | Scroll trigger for the fly-in |
 | Section (optional) | `data-book-scroll="1"` | **Don't add this** if you want the book closed until click. Only add it if the book should open on scroll. |
 | Stage | `data-featured-stage` | Right column. Relative, overflow hidden, min-height ~42vw, `perspective: 1400px` |
-| Strips canvas | `data-featured-strips` | Background bars. First child of the stage, absolute fill |
+| Strips canvas | `data-featured-strips` | Background bars. Put this canvas in the stage, behind the book. Uses `featured-strips.js`. |
 | Overlay (optional) | `data-featured-overlay` | Empty div. Orange wash over the strips |
 | Book wrap | `data-featured-book` | GSAP flies this in. Position absolute, fill the stage |
 | Canvas | `data-book` | The 3D book |
